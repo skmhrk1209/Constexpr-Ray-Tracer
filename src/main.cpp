@@ -3,8 +3,8 @@
 #include "ray.hpp"
 #include "csg.hpp"
 #include "math.hpp"
-#include "vector.hpp"
 #include "sphere.hpp"
+#include "vector.hpp"
 
 #include <boost/progress.hpp>
 
@@ -38,7 +38,7 @@ constexpr auto render(
             auto direction = position / rendex::blas::norm(position);
             rendex::optics::Ray<Scalar> ray(position, direction);
 
-            auto color = rendex::math::linmap(ray.direction().y(), -1.0, 1.0, rendex::blas::Vector<Scalar, 3>{1.0, 1.0, 1.0}, rendex::blas::Vector<Scalar, 3>{0.5, 0.7, 1.0});
+            auto color = rendex::math::linmap(ray.direction()[1], -1.0, 1.0, rendex::blas::Vector<Scalar, 3>{1.0, 1.0, 1.0}, rendex::blas::Vector<Scalar, 3>{0.5, 0.7, 1.0});
 
             /*
             auto diff = ray.position() - bounds.position();
@@ -109,8 +109,7 @@ int main()
 
     constexpr rendex::geom::Union<rendex::geom::Sphere<Scalar>, rendex::geom::Sphere<Scalar>> object{
         rendex::geom::Sphere<Scalar>{rendex::blas::Vector<Scalar, 3>{0.0, 0.0, 1.0}, 0.5},
-        // rendex::geom::Sphere<Scalar>{rendex::blas::Vector<Scalar, 3>{0.0, -100.5, 1.0}, 100.0}};
-        rendex::geom::Sphere<Scalar>{rendex::blas::Vector<Scalar, 3>{0.0, 0.0, 1.0}, 0.5}};
+        rendex::geom::Sphere<Scalar>{rendex::blas::Vector<Scalar, 3>{0.0, -100.5, 1.0}, 100.0}};
 
     constexpr rendex::geom::Sphere<Scalar> bounds{rendex::blas::Vector<Scalar, 3>{0.0, 0.0, 0.0}, 1000.0};
 
