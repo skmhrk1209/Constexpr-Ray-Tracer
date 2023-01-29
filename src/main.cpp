@@ -1,10 +1,10 @@
 #include <fstream>
 #include <iostream>
-#include "ray.hpp"
-#include "csg.hpp"
+#include "blas.hpp"
+#include "geom.hpp"
 #include "math.hpp"
-#include "sphere.hpp"
-#include "vector.hpp"
+#include "common.hpp"
+#include "vision.hpp"
 
 #include <boost/progress.hpp>
 
@@ -31,14 +31,14 @@ constexpr auto render(
             auto u = pixel.x() - 0.5 + (i + 1.) / (num_aa_samples + 1.);
             auto v = pixel.y() - 0.5 + (j + 1.) / (num_aa_samples + 1.);
 
-            auto x = rendex::math::linmap(u, 0., image_width - 1., -viewport_width / 2.0, viewport_width / 2.0);
-            auto y = rendex::math::linmap(v, 0., image_height - 1., -viewport_height / 2.0, viewport_height / 2.0);
+            auto x = rendex::math::lerp(u, 0., image_width - 1., -viewport_width / 2.0, viewport_width / 2.0);
+            auto y = rendex::math::lerp(v, 0., image_height - 1., -viewport_height / 2.0, viewport_height / 2.0);
 
             rendex::blas::Vector<Scalar, 3> position{x, y, focal_length};
             auto direction = position / rendex::blas::norm(position);
             rendex::optics::Ray<Scalar> ray(position, direction);
 
-            auto color = rendex::math::linmap(ray.direction()[1], -1.0, 1.0, rendex::blas::Vector<Scalar, 3>{1.0, 1.0, 1.0}, rendex::blas::Vector<Scalar, 3>{0.5, 0.7, 1.0});
+            auto color = rendex::math::lerp(ray.direction()[1], -1.0, 1.0, rendex::blas::Vector<Scalar, 3>{1.0, 1.0, 1.0}, rendex::blas::Vector<Scalar, 3>{0.5, 0.7, 1.0});
 
             /*
             auto diff = ray.position() - bounds.position();
@@ -61,7 +61,7 @@ constexpr auto render(
                 if (rendex::math::abs(distance) < convergence_threshold)
                 {
                     auto normal = object.normal(ray.position());
-                    color = rendex::math::linmap(normal, rendex::blas::Vector<Scalar, 3>{-1.0, -1.0, -1.0}, rendex::blas::Vector<Scalar, 3>{1.0, 1.0, 1.0}, rendex::blas::Vector<Scalar, 3>{0.0, 0.0, 0.0}, rendex::blas::Vector<Scalar, 3>{1.0, 1.0, 1.0});
+                    color = rendex::math::lerp(normal, rendex::blas::Vector<Scalar, 3>{-1.0, -1.0, -1.0}, rendex::blas::Vector<Scalar, 3>{1.0, 1.0, 1.0}, rendex::blas::Vector<Scalar, 3>{0.0, 0.0, 0.0}, rendex::blas::Vector<Scalar, 3>{1.0, 1.0, 1.0});
                     break;
                 }
                 else
@@ -87,8 +87,8 @@ int main()
 
     // image
 
-    constexpr auto image_width = 800;
-    constexpr auto image_height = 400;
+    constexpr auto image_width = 200;
+    constexpr auto image_height = 100;
 
     // camera
 
@@ -115,10 +115,10 @@ int main()
 
     // rendering
 
-    boost::progress_timer progress_timer;
-    boost::progress_display progress_display(image_width * image_height);
+    // boost::progress_timer progress_timer;
+    // boost::progress_display progress_display(image_width * image_height);
 
-    /* constexpr */ auto colors = [&]() constexpr
+    constexpr auto colors = [&]()
     {
         std::array<rendex::blas::Vector<Scalar, 3>, image_width * image_height> colors;
         for (auto j = 0; j < image_height; ++j)
@@ -138,7 +138,7 @@ int main()
                     bounds,
                     rendex::blas::Vector<int, 2>{i, j});
 
-                ++progress_display;
+                //++progress_display;
             }
         }
         return colors;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector.hpp"
+#include "blas.hpp"
 
 namespace rendex::optics
 {
