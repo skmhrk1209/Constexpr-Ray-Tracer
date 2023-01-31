@@ -4,14 +4,14 @@
 
 namespace rendex
 {
-    template <typename... Types>
-    struct Overloaded : Types...
+    template <typename... Ts>
+    struct Overloaded : Ts...
     {
-        using Types::operator()...;
+        using Ts::operator()...;
     };
     // additional deduction guide (CTAD)
-    template <typename... Types>
-    Overloaded(Types...) -> Overloaded<Types...>;
+    template <typename... Ts>
+    Overloaded(Ts...) -> Overloaded<Ts...>;
 
     // currying & partial application
     constexpr decltype(auto) curry(auto &&function)

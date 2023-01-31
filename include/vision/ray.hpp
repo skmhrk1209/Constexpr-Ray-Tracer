@@ -2,7 +2,7 @@
 
 #include "blas.hpp"
 
-namespace rendex::optics
+namespace rendex::vision
 {
     template <typename Scalar>
     class Ray
@@ -10,13 +10,17 @@ namespace rendex::optics
     public:
         using Vector = rendex::blas::Vector<Scalar, 3>;
 
+        constexpr Ray() = default;
+        constexpr Ray(const Ray &) = default;
+        constexpr Ray(Ray &&) = default;
+
         constexpr Ray(const auto &position, const auto &direction)
             : m_position(position),
               m_direction(direction) {}
 
-        constexpr Ray(auto &&position, auto &&direction)
-            : m_position(std::forward<std::decay_t<decltype(position)>>(position)),
-              m_direction(std::forward<std::decay_t<decltype(direction)>>(direction)) {}
+        constexpr Ray(const auto &&position, const auto &&direction)
+            : m_position(std::move(position)),
+              m_direction(std::move(direction)) {}
 
         constexpr auto &position() { return m_position; }
         constexpr const auto &position() const { return m_position; }
@@ -24,7 +28,8 @@ namespace rendex::optics
         constexpr auto &direction() { return m_direction; }
         constexpr const auto &direction() const { return m_direction; }
 
-        constexpr void advance(auto distance) { m_position = m_position + m_direction * distance; }
+        constexpr auto advance(auto distance) { m_position = m_position + m_direction * distance; }
+        constexpr auto advanced(auto distance) const { return m_position + m_direction * distance; }
 
     private:
         Vector m_position;

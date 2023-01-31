@@ -1,2 +1,2 @@
-#include "blas/common.hpp"
-#include "blas/vector.hpp"
+#include "blas/matrix.hpp"
+#include "blas/tensor.hpp"

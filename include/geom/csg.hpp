@@ -1,31 +1,56 @@
 #pragma once
 
+#include <variant>
+#include "common.hpp"
+
 namespace rendex::geom
 {
-    template <typename Geometry1, typename Geometry2, typename Compare>
+    template <typename Geometry1, typename Geometry2, typename Op>
     class CSG
     {
     public:
+        constexpr CSG() = default;
+        constexpr CSG(const CSG &) = default;
+        constexpr CSG(CSG &&) = default;
+
         constexpr CSG(const auto &geometry_1, const auto &geometry_2)
             : m_geometry_1(geometry_1),
               m_geometry_2(geometry_2) {}
 
-        constexpr CSG(auto &&geometry_1, auto &&geometry_2)
-            : m_geometry_1(std::forward<std::decay_t<decltype(geometry_1)>>(geometry_1)),
-              m_geometry_2(std::forward<std::decay_t<decltype(geometry_2)>>(geometry_2)) {}
+        constexpr CSG(const auto &&geometry_1, const auto &&geometry_2)
+            : m_geometry_1(std::move(geometry_1)),
+              m_geometry_2(std::move(geometry_2)) {}
+
+        constexpr auto intersect(const auto &ray) const
+        {
+            auto [geometry_1, distance_1] = m_geometry_1.intersect(ray);
+            auto [geometry_2, distance_2] = m_geometry_2.intersect(ray);
+            if (Op()(distance_1, distance_2))
+            {
+                std::variant<std::decay_t<decltype(geometry_1)>, std::decay_t<decltype(geometry_2)>> geometry(std::in_place_index<0>, geometry_1);
+                return std::make_tuple(std::move(geometry), std::move(distance_1));
+            }
+            else
+            {
+                std::variant<std::decay_t<decltype(geometry_1)>, std::decay_t<decltype(geometry_2)>> geometry(std::in_place_index<1>, geometry_2);
+                return std::make_tuple(std::move(geometry), std::move(distance_2));
+            }
+        }
 
         constexpr auto distance(const auto &position) const
         {
-            auto distance_1 = m_geometry_1.distance(position);
-            auto distance_2 = m_geometry_2.distance(position);
-            return Compare()(distance_1, distance_2) ? distance_1 : distance_2;
-        }
-
-        constexpr auto normal(const auto &position) const
-        {
-            auto distance_1 = m_geometry_1.distance(position);
-            auto distance_2 = m_geometry_2.distance(position);
-            return Compare()(distance_1, distance_2) ? m_geometry_1.normal(position) : m_geometry_2.normal(position);
+            auto [geometry_1, distance_1] = m_geometry_1.distance(position);
+            auto [geometry_2, distance_2] = m_geometry_2.distance(position);
+            if (Op()(distance_1, distance_2))
+            {
+                std::variant<std::decay_t<decltype(geometry_1)>, std::decay_t<decltype(geometry_2)>> geometry(std::in_place_index<0>, geometry_1);
+                return std::make_tuple(std::move(geometry), std::move(distance_1));
+            }
+            else
+            {
+                std::variant<std::decay_t<decltype(geometry_1)>, std::decay_t<decltype(geometry_2)>> geometry(std::in_place_index<1>, geometry_2);
+                return std::make_tuple(std::move(geometry), std::move(distance_2));
+            }
         }
 
     private:
@@ -35,9 +60,17 @@ namespace rendex::geom
 
     struct UnionOp
     {
-        constexpr auto operator()(const auto &x, const auto &y) const
+        template <typename T>
+        constexpr auto operator()(const T &x, const T &y) const
         {
-            return x < y;
+            if constexpr (rendex::is_optional_v<T>)
+            {
+                return x ? y ? x.value() < y.value() : true : false;
+            }
+            else
+            {
+                return x < y;
+            }
         }
     };
 
@@ -46,9 +79,17 @@ namespace rendex::geom
 
     struct SubtractionOp
     {
-        constexpr auto operator()(const auto &x, const auto &y) const
+        template <typename T>
+        constexpr auto operator()(const T &x, const T &y) const
         {
-            return x > -y;
+            if constexpr (rendex::is_optional_v<T>)
+            {
+                return x ? y ? x.value() > -y.value() : true : false;
+            }
+            else
+            {
+                return x > -y;
+            }
         }
     };
 
@@ -57,9 +98,17 @@ namespace rendex::geom
 
     struct IntersectionOp
     {
-        constexpr auto operator()(const auto &x, const auto &y) const
+        template <typename T>
+        constexpr auto operator()(const T &x, const T &y) const
         {
-            return x > y;
+            if constexpr (rendex::is_optional_v<T>)
+            {
+                return x ? y ? x.value() > y.value() : true : false;
+            }
+            else
+            {
+                return x > y;
+            }
         }
     };
 

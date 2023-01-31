@@ -1,6 +1,6 @@
 #pragma once
 
-#include <array>
+#include <optional>
 #include <type_traits>
 
 namespace rendex
@@ -10,14 +10,27 @@ namespace rendex
     {
     };
 
-    template <template <typename...> typename Check, typename... Types>
-    struct is_detected_impl<std::void_t<Check<Types...>>, Check, Types...> : std::true_type
+    template <template <typename...> typename Op, typename... Ts>
+    struct is_detected_impl<std::void_t<Op<Ts...>>, Op, Ts...> : std::true_type
     {
     };
 
-    template <template <typename...> typename Check, typename... Types>
-    using is_detected = is_detected_impl<std::void_t<>, Check, Types...>;
+    template <template <typename...> typename Op, typename... Ts>
+    using is_detected = is_detected_impl<std::void_t<>, Op, Ts...>;
 
-    template <template <typename...> typename Check, typename... Types>
-    constexpr auto is_detected_v = is_detected<Check, Types...>::value;
+    template <template <typename...> typename Op, typename... Ts>
+    constexpr auto is_detected_v = is_detected<Op, Ts...>::value;
+
+    template <typename>
+    struct is_optional : std::false_type
+    {
+    };
+
+    template <typename T>
+    struct is_optional<std::optional<T>> : std::true_type
+    {
+    };
+
+    template <typename T>
+    constexpr auto is_optional_v = is_optional<T>::value;
 }
