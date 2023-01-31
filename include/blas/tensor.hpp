@@ -2,8 +2,10 @@
 
 #include <cmath>
 #include <array>
+#include <vector>
 #include <numeric>
 #include <type_traits>
+#include "math.hpp"
 #include "common.hpp"
 
 namespace rendex::blas
@@ -15,18 +17,20 @@ namespace rendex::blas
     using IndexedType = decltype(std::declval<T>()[std::declval<std::size_t>()]);
 
     template <template <typename, auto> typename Array, typename T, auto N, auto... Ns>
-    struct MultiArray : Array<MultiArray<Array, T, Ns...>, N>
+    struct GenericTensorImpl : Array<GenericTensorImpl<Array, T, Ns...>, N>
     {
     };
 
     template <template <typename, auto> typename Array, typename T, auto N>
         requires rendex::is_detected_v<IndexedType, Array<T, N>>
-    struct MultiArray<Array, T, N> : Array<T, N>
+    struct GenericTensorImpl<Array, T, N> : Array<T, N>
     {
     };
 
     template <template <typename, auto> typename Array, typename T, auto... Ns>
-    using GenericTensor = MultiArray<Array, T, Ns...>;
+    using GenericTensor = GenericTensorImpl<Array, T, Ns...>;
+
+    // ----------------------------------------------------------------
 
     template <typename T, auto... Ns>
     using Tensor = GenericTensor<std::array, T, Ns...>;
@@ -36,6 +40,19 @@ namespace rendex::blas
 
     template <typename T, auto M, auto N>
     using Matrix = Tensor<T, M, N>;
+
+    // ----------------------------------------------------------------
+
+    template <typename T, auto N>
+    struct vector : std::vector<T>
+    {
+        using std::vector<T>::vector;
+        constexpr vector() : vector(N) {}
+        constexpr vector(const std::allocator<T> &allocator) : vector(N, allocator) {}
+    };
+
+    template <typename T, auto... Ns>
+    using DynamicTensor = GenericTensor<vector, T, Ns...>;
 
     // ================================================================
     // rank
@@ -96,18 +113,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor2)>> &&
             Broadcastable<std::decay_t<decltype(tensor1)>, std::decay_t<decltype(tensor2)>>)
     {
-        std::decay_t<decltype(tensor1)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor1)>, 0>)
-            {
-                output[I] = tensor1[I] + tensor2[I];
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor1)>{(tensor1[Is] + tensor2[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor1)>, 0>>{});
     }
 
     constexpr auto operator+(const auto &tensor, auto scalar)
@@ -115,18 +125,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor)>> &&
             ScalarShaped<std::decay_t<decltype(scalar)>>)
     {
-        std::decay_t<decltype(tensor)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor)>, 0>)
-            {
-                output[I] = tensor[I] + scalar;
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor)>{(tensor[Is] + scalar)...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
     }
 
     constexpr auto operator+(auto scalar, const auto &tensor)
@@ -134,18 +137,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor)>> &&
             ScalarShaped<std::decay_t<decltype(scalar)>>)
     {
-        std::decay_t<decltype(tensor)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor)>, 0>)
-            {
-                output[I] = scalar + tensor[I];
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor)>{(scalar + tensor[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
     }
 
     constexpr auto operator+(const auto &tensor)
@@ -162,18 +158,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor2)>> &&
             Broadcastable<std::decay_t<decltype(tensor1)>, std::decay_t<decltype(tensor2)>>)
     {
-        std::decay_t<decltype(tensor1)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor1)>, 0>)
-            {
-                output[I] = tensor1[I] - tensor2[I];
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor1)>{(tensor1[Is] - tensor2[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor1)>, 0>>{});
     }
 
     constexpr auto operator-(const auto &tensor, auto scalar)
@@ -181,18 +170,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor)>> &&
             ScalarShaped<std::decay_t<decltype(scalar)>>)
     {
-        std::decay_t<decltype(tensor)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor)>, 0>)
-            {
-                output[I] = tensor[I] - scalar;
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor)>{(tensor[Is] - scalar)...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
     }
 
     constexpr auto operator-(auto scalar, const auto &tensor)
@@ -200,18 +182,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor)>> &&
             ScalarShaped<std::decay_t<decltype(scalar)>>)
     {
-        std::decay_t<decltype(tensor)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor)>, 0>)
-            {
-                output[I] = scalar - tensor[I];
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor)>{(scalar - tensor[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
     }
 
     constexpr auto operator-(const auto &tensor)
@@ -228,18 +203,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor2)>> &&
             Broadcastable<std::decay_t<decltype(tensor1)>, std::decay_t<decltype(tensor2)>>)
     {
-        std::decay_t<decltype(tensor1)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor1)>, 0>)
-            {
-                output[I] = tensor1[I] * tensor2[I];
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor1)>{(tensor1[Is] * tensor2[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor1)>, 0>>{});
     }
 
     constexpr auto operator*(const auto &tensor, auto scalar)
@@ -247,18 +215,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor)>> &&
             ScalarShaped<std::decay_t<decltype(scalar)>>)
     {
-        std::decay_t<decltype(tensor)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor)>, 0>)
-            {
-                output[I] = tensor[I] * scalar;
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor)>{(tensor[Is] * scalar)...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
     }
 
     constexpr auto operator*(auto scalar, const auto &tensor)
@@ -266,18 +227,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor)>> &&
             ScalarShaped<std::decay_t<decltype(scalar)>>)
     {
-        std::decay_t<decltype(tensor)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor)>, 0>)
-            {
-                output[I] = scalar * tensor[I];
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor)>{(scalar * tensor[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
     }
 
     // ================================================================
@@ -289,18 +243,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor2)>> &&
             Broadcastable<std::decay_t<decltype(tensor1)>, std::decay_t<decltype(tensor2)>>)
     {
-        std::decay_t<decltype(tensor1)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor1)>, 0>)
-            {
-                output[I] = tensor1[I] / tensor2[I];
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor1)>{(tensor1[Is] / tensor2[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor1)>, 0>>{});
     }
 
     constexpr auto operator/(const auto &tensor, auto scalar)
@@ -308,18 +255,11 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor)>> &&
             ScalarShaped<std::decay_t<decltype(scalar)>>)
     {
-        std::decay_t<decltype(tensor)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor)>, 0>)
-            {
-                output[I] = tensor[I] / scalar;
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor)>{(tensor[Is] / scalar)...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
     }
 
     constexpr auto operator/(auto scalar, const auto &tensor)
@@ -327,31 +267,24 @@ namespace rendex::blas
             TensorShaped<std::decay_t<decltype(tensor)>> &&
             ScalarShaped<std::decay_t<decltype(scalar)>>)
     {
-        std::decay_t<decltype(tensor)> output;
-        [function = [&]<auto I>(auto function, std::integral_constant<std::size_t, I>) {
-            if constexpr (I < dimension_v<std::decay_t<decltype(tensor)>, 0>)
-            {
-                output[I] = scalar / tensor[I];
-                function(function, std::integral_constant<std::size_t, I + 1>{});
-            }
-        }](auto &&...args)
+        return [&]<auto... Is>(std::index_sequence<Is...>)
         {
-            return function(function, std::forward<decltype(args)>(args)...);
-        }(std::integral_constant<std::size_t, 0>{});
-        return output;
+            return std::decay_t<decltype(tensor)>{(scalar / tensor[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
     }
 
     // ================================================================
     // dot
 
-    constexpr auto dot(const auto &tensor1, const auto &tensor2)
-    {
-        return sum(tensor1 * tensor2);
-    }
-
     constexpr auto sum(const auto &tensor)
     {
         return std::accumulate(std::begin(tensor), std::end(tensor), std::decay_t<decltype(tensor[0])>{});
+    }
+
+    constexpr auto dot(const auto &tensor1, const auto &tensor2)
+    {
+        return sum(tensor1 * tensor2);
     }
 
     // ================================================================
@@ -359,7 +292,7 @@ namespace rendex::blas
 
     constexpr auto norm(const auto &tensor)
     {
-        return std::sqrt(dot(tensor, tensor));
+        return rendex::math::sqrt(dot(tensor, tensor));
     }
 
     constexpr auto normalized(const auto &tensor)

@@ -5,10 +5,10 @@
 
 namespace rendex::graphics
 {
-    template <typename Scalar, auto H, auto W, auto MSAA>
+    template <template <typename, auto...> typename Image, typename Scalar, auto H, auto W, auto MSAA>
     constexpr auto ray_marching(const auto &object, const auto &camera, auto background, const auto &bounds, auto num_iterations, auto convergence_threshold)
     {
-        rendex::blas::Tensor<Scalar, H, W, 3> image{};
+        Image<Scalar, H, W, 3> image{};
 
         for (auto j = 0; j < H; ++j)
         {
@@ -30,6 +30,7 @@ namespace rendex::graphics
                             for (auto k = 0; k < num_iterations; ++k)
                             {
                                 auto [geometry, distance] = object.distance(ray.position());
+                                ray.advance(distance);
                                 if (std::abs(distance) < convergence_threshold)
                                 {
                                     auto normal = std::visit([&](const auto &geometry)
@@ -42,11 +43,8 @@ namespace rendex::graphics
                                 {
                                     auto [geometry, distance] = bounds.distance(ray.position());
                                     if (distance > 0.0)
-                                    {
                                         break;
-                                    }
                                 }
-                                ray.advance(distance);
                             }
 
                             return background(ray);
@@ -56,7 +54,8 @@ namespace rendex::graphics
                     }
                 }
 
-                image[j][i] = rendex::blas::sum(rendex::blas::sum(subimage)) / (MSAA * MSAA);
+                auto color = rendex::blas::sum(rendex::blas::sum(subimage)) / (MSAA * MSAA);
+                std::move(std::begin(color), std::end(color), std::begin(image[j][i]));
             }
         }
 

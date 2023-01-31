@@ -5,10 +5,10 @@
 
 namespace rendex::graphics
 {
-    template <typename Scalar, auto H, auto W, auto MSAA>
+    template <template <typename, auto...> typename Image, typename Scalar, auto H, auto W, auto MSAA>
     constexpr auto ray_casting(const auto &object, const auto &camera, auto background)
     {
-        rendex::blas::Tensor<Scalar, H, W, 3> image{};
+        Image<Scalar, H, W, 3> image{};
 
         for (auto j = 0; j < H; ++j)
         {
@@ -31,8 +31,9 @@ namespace rendex::graphics
 
                             if (distance)
                             {
+                                ray.advance(distance.value());
                                 auto normal = std::visit([&](const auto &geometry)
-                                                         { return geometry.normal(ray.advanced(distance.value())); },
+                                                         { return geometry.normal(ray.position()); },
                                                          geometry);
                                 auto color = rendex::math::lerp(normal, -1.0, 1.0, 0.0, 1.0);
                                 return color;
@@ -47,7 +48,8 @@ namespace rendex::graphics
                     }
                 }
 
-                image[j][i] = rendex::blas::sum(rendex::blas::sum(subimage)) / (MSAA * MSAA);
+                auto color = rendex::blas::sum(rendex::blas::sum(subimage)) / (MSAA * MSAA);
+                std::move(std::begin(color), std::end(color), std::begin(image[j][i]));
             }
         }
 
