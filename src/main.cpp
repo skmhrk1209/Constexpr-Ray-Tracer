@@ -1,50 +1,53 @@
+#include <cmath>
 #include <fstream>
 #include <iostream>
-#include "blas.hpp"
-#include "geom.hpp"
-#include "math.hpp"
-#include "common.hpp"
-#include "vision.hpp"
-#include "graphics.hpp"
-#include <cmath>
 #include <numbers>
 
-#include <boost/progress.hpp>
+#include "camera.hpp"
+#include "common.hpp"
+#include "geometry.hpp"
+#include "math.hpp"
+#include "reflection.hpp"
+#include "rendering.hpp"
+#include "tensor.hpp"
 
-#define CONSTEXPR // constexpr
+#define CONSTEXPR  // constexpr
 
-int main()
-{
+int main() {
     using Scalar = double;
+    using Vector = rendex::tensor::Vector<Scalar, 3>;
+    using Matrix = rendex::tensor::Matrix<Scalar, 3, 3>;
 
     // object
 
-    CONSTEXPR rendex::geom::Union<rendex::geom::Sphere<Scalar>, rendex::geom::Sphere<Scalar>> object{
-        rendex::geom::Sphere<Scalar>{rendex::blas::Vector<Scalar, 3>{0.0, 0.0, 1.0}, 0.5},
-        rendex::geom::Sphere<Scalar>{rendex::blas::Vector<Scalar, 3>{0.0, 100.5, 1.0}, 100.0}};
+    CONSTEXPR rendex::geometry::Union<rendex::geometry::Sphere<Scalar>, rendex::geometry::Sphere<Scalar>> object(
+        rendex::geometry::Sphere<Scalar>(
+            0.5, rendex::tensor::Vector<Scalar, 3>{0.0, 0.0, 1.0},
+            rendex::reflection::Material<Scalar>(rendex::tensor::Vector<Scalar, 3>{1.0, 1.0, 1.0})),
+        rendex::geometry::Sphere<Scalar>(
+            100.0, rendex::tensor::Vector<Scalar, 3>{0.0, 100.5, 1.0},
+            rendex::reflection::Material<Scalar>(rendex::tensor::Vector<Scalar, 3>{1.0, 1.0, 1.0})));
 
-    CONSTEXPR rendex::geom::Sphere<Scalar> bounds{rendex::blas::Vector<Scalar, 3>{}, 100.0};
+    CONSTEXPR rendex::geometry::Sphere<Scalar> bounds(100.0, rendex::tensor::Vector<Scalar, 3>{},
+                                                      rendex::reflection::Material<Scalar>{});
 
     // camera
 
-    constexpr auto H = 100;
-    constexpr auto W = 200;
-    constexpr auto MSAA = 1;
+    constexpr auto H = 400;
+    constexpr auto W = 800;
+    constexpr auto MSAA = 10;
 
     constexpr auto aspect_ratio = 1. * W / H;
     constexpr auto vertical_fov = std::numbers::pi / 2.0;
 
-    CONSTEXPR rendex::vision::Camera<Scalar> camera(
-        vertical_fov,
-        aspect_ratio,
-        rendex::blas::Vector<Scalar, 3>{},
-        rendex::blas::Matrix<Scalar, 3, 3>{});
+    CONSTEXPR rendex::camera::Camera<Scalar> camera(vertical_fov, aspect_ratio, rendex::tensor::Vector<Scalar, 3>{},
+                                                    rendex::tensor::Matrix<Scalar, 3, 3>{});
 
     // background
 
-    auto background = [](const auto &ray) constexpr
-    {
-        return rendex::math::lerp(ray.direction()[1], -1.0, 1.0, 1.0, rendex::blas::Vector<Scalar, 3>{0.5, 0.7, 1.0});
+    auto background = [](const auto &ray) constexpr {
+        return rendex::math::lerp(-ray.direction()[1], -1.0, 1.0, 1.0,
+                                  rendex::tensor::Vector<Scalar, 3>{0.5, 0.7, 1.0});
     };
 
     // ray marching
@@ -54,20 +57,18 @@ int main()
 
     // rendering
 
-    // CONSTEXPR auto image = rendex::graphics::ray_casting<rendex::blas::DynamicTensor, Scalar, H, W, MSAA>(object, camera, background);
-    CONSTEXPR auto image = rendex::graphics::ray_marching<rendex::blas::DynamicTensor, Scalar, H, W, MSAA>(object, camera, background, bounds, num_iterations, convergence_threshold);
+    CONSTEXPR auto image = rendex::rendering::ray_casting<rendex::tensor::DynamicTensor, Scalar, H, W, MSAA>(
+        object, camera, background, 50);
+    // CONSTEXPR auto image = rendex::rendering::ray_marching<rendex::tensor::DynamicTensor, Scalar, H, W,
+    // MSAA>(object, camera, background, bounds, num_iterations, convergence_threshold);
 
     std::ofstream image_stream("image.ppm");
 
-    image_stream << "P3\n"
-                 << W << " " << H << "\n255\n";
+    image_stream << "P3\n" << W << " " << H << "\n255\n";
 
-    for (const auto &colors : image)
-    {
-        for (const auto &color : colors)
-        {
-            for (const auto &value : color)
-            {
+    for (const auto &colors : image) {
+        for (const auto &color : colors) {
+            for (const auto &value : color) {
                 image_stream << value * ((1 << 8) - 1) << " ";
             }
             image_stream << std::endl;

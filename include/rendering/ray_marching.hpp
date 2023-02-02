@@ -1,9 +1,9 @@
 #pragma once
 
 #include "math.hpp"
-#include "blas.hpp"
+#include "tensor.hpp"
 
-namespace rendex::graphics
+namespace rendex::rendering
 {
     template <template <typename, auto...> typename Image, typename Scalar, auto H, auto W, auto MSAA>
     constexpr auto ray_marching(const auto &object, const auto &camera, auto background, const auto &bounds, auto num_iterations, auto convergence_threshold)
@@ -14,7 +14,7 @@ namespace rendex::graphics
         {
             for (auto i = 0; i < W; ++i)
             {
-                rendex::blas::Tensor<Scalar, MSAA, MSAA, 3> subimage{};
+                rendex::tensor::Tensor<Scalar, MSAA, MSAA, 3> subimage{};
 
                 for (auto jj = 0; jj < MSAA; ++jj)
                 {
@@ -25,7 +25,7 @@ namespace rendex::graphics
 
                         auto ray = camera.ray(u, v);
 
-                        auto render = [&](auto &ray)
+                        auto render = [&](auto &ray) constexpr
                         {
                             for (auto k = 0; k < num_iterations; ++k)
                             {
@@ -54,7 +54,7 @@ namespace rendex::graphics
                     }
                 }
 
-                auto color = rendex::blas::sum(rendex::blas::sum(subimage)) / (MSAA * MSAA);
+                auto color = rendex::tensor::sum(rendex::tensor::sum(subimage)) / (MSAA * MSAA);
                 std::move(std::begin(color), std::end(color), std::begin(image[j][i]));
             }
         }
