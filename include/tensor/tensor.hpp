@@ -15,13 +15,13 @@ namespace rendex::tensor {
 // class
 
 template <typename T>
-using IndexedType = decltype(std::declval<T>()[std::declval<std::size_t>()]);
+concept Indexable = requires(T x) { x[std::declval<std::size_t>()]; };
 
 template <template <typename, auto> typename Array, typename T, auto N, auto... Ns>
 struct GenericTensorImpl : Array<GenericTensorImpl<Array, T, Ns...>, N> {};
 
 template <template <typename, auto> typename Array, typename T, auto N>
-    requires rendex::is_detected_v<IndexedType, Array<T, N>>
+    requires Indexable<Array<T, N>>
 struct GenericTensorImpl<Array, T, N> : Array<T, N> {};
 
 template <template <typename, auto> typename Array, typename T, auto... Ns>
@@ -96,32 +96,24 @@ concept Broadcastable = (dimension_v<T, 0> == dimension_v<U, 0>);
 // ================================================================
 // addition
 
-constexpr auto operator+(const auto &tensor1, const auto &tensor2)
-    requires(TensorShaped<std::decay_t<decltype(tensor1)>> && TensorShaped<std::decay_t<decltype(tensor2)>> &&
-             Broadcastable<std::decay_t<decltype(tensor1)>, std::decay_t<decltype(tensor2)>>)
+template <TensorShaped Tensor1, TensorShaped Tensor2>
+constexpr auto operator+(const Tensor1 &tensor_1, const Tensor2 &tensor_2)
+    requires Broadcastable<Tensor1, Tensor2>
 {
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor1)>{(tensor1[Is] + tensor2[Is])...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor1)>, 0>>{});
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor1 { return {(tensor_1[Is] + tensor_2[Is])...}; }
+    (std::make_index_sequence<dimension_v<Tensor1, 0>>{});
 }
 
-constexpr auto operator+(const auto &tensor, auto scalar)
-    requires(TensorShaped<std::decay_t<decltype(tensor)>> && ScalarShaped<std::decay_t<decltype(scalar)>>)
-{
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor)>{(tensor[Is] + scalar)...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
+template <TensorShaped Tensor, ScalarShaped Scalar>
+constexpr auto operator+(const Tensor &tensor, Scalar scalar) {
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor { return {(tensor[Is] + scalar)...}; }
+    (std::make_index_sequence<dimension_v<Tensor, 0>>{});
 }
 
-constexpr auto operator+(auto scalar, const auto &tensor)
-    requires(TensorShaped<std::decay_t<decltype(tensor)>> && ScalarShaped<std::decay_t<decltype(scalar)>>)
-{
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor)>{(scalar + tensor[Is])...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
+template <TensorShaped Tensor, ScalarShaped Scalar>
+constexpr auto operator+(Scalar scalar, const Tensor &tensor) {
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor { return {(scalar + tensor[Is])...}; }
+    (std::make_index_sequence<dimension_v<Tensor, 0>>{});
 }
 
 constexpr auto operator+(const auto &tensor) { return 0 + tensor; }
@@ -129,32 +121,24 @@ constexpr auto operator+(const auto &tensor) { return 0 + tensor; }
 // ================================================================
 // subtraction
 
-constexpr auto operator-(const auto &tensor1, const auto &tensor2)
-    requires(TensorShaped<std::decay_t<decltype(tensor1)>> && TensorShaped<std::decay_t<decltype(tensor2)>> &&
-             Broadcastable<std::decay_t<decltype(tensor1)>, std::decay_t<decltype(tensor2)>>)
+template <TensorShaped Tensor1, TensorShaped Tensor2>
+constexpr auto operator-(const Tensor1 &tensor_1, const Tensor2 &tensor_2)
+    requires Broadcastable<Tensor1, Tensor2>
 {
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor1)>{(tensor1[Is] - tensor2[Is])...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor1)>, 0>>{});
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor1 { return {(tensor_1[Is] - tensor_2[Is])...}; }
+    (std::make_index_sequence<dimension_v<Tensor1, 0>>{});
 }
 
-constexpr auto operator-(const auto &tensor, auto scalar)
-    requires(TensorShaped<std::decay_t<decltype(tensor)>> && ScalarShaped<std::decay_t<decltype(scalar)>>)
-{
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor)>{(tensor[Is] - scalar)...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
+template <TensorShaped Tensor, ScalarShaped Scalar>
+constexpr auto operator-(const Tensor &tensor, Scalar scalar) {
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor { return {(tensor[Is] - scalar)...}; }
+    (std::make_index_sequence<dimension_v<Tensor, 0>>{});
 }
 
-constexpr auto operator-(auto scalar, const auto &tensor)
-    requires(TensorShaped<std::decay_t<decltype(tensor)>> && ScalarShaped<std::decay_t<decltype(scalar)>>)
-{
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor)>{(scalar - tensor[Is])...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
+template <TensorShaped Tensor, ScalarShaped Scalar>
+constexpr auto operator-(Scalar scalar, const Tensor &tensor) {
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor { return {(scalar - tensor[Is])...}; }
+    (std::make_index_sequence<dimension_v<Tensor, 0>>{});
 }
 
 constexpr auto operator-(const auto &tensor) { return 0 - tensor; }
@@ -162,70 +146,54 @@ constexpr auto operator-(const auto &tensor) { return 0 - tensor; }
 // ================================================================
 // multiplication
 
-constexpr auto operator*(const auto &tensor1, const auto &tensor2)
-    requires(TensorShaped<std::decay_t<decltype(tensor1)>> && TensorShaped<std::decay_t<decltype(tensor2)>> &&
-             Broadcastable<std::decay_t<decltype(tensor1)>, std::decay_t<decltype(tensor2)>>)
+template <TensorShaped Tensor1, TensorShaped Tensor2>
+constexpr auto operator*(const Tensor1 &tensor_1, const Tensor2 &tensor_2)
+    requires Broadcastable<Tensor1, Tensor2>
 {
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor1)>{(tensor1[Is] * tensor2[Is])...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor1)>, 0>>{});
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor1 { return {(tensor_1[Is] * tensor_2[Is])...}; }
+    (std::make_index_sequence<dimension_v<Tensor1, 0>>{});
 }
 
-constexpr auto operator*(const auto &tensor, auto scalar)
-    requires(TensorShaped<std::decay_t<decltype(tensor)>> && ScalarShaped<std::decay_t<decltype(scalar)>>)
-{
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor)>{(tensor[Is] * scalar)...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
+template <TensorShaped Tensor, ScalarShaped Scalar>
+constexpr auto operator*(const Tensor &tensor, Scalar scalar) {
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor { return {(tensor[Is] * scalar)...}; }
+    (std::make_index_sequence<dimension_v<Tensor, 0>>{});
 }
 
-constexpr auto operator*(auto scalar, const auto &tensor)
-    requires(TensorShaped<std::decay_t<decltype(tensor)>> && ScalarShaped<std::decay_t<decltype(scalar)>>)
-{
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor)>{(scalar * tensor[Is])...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
+template <TensorShaped Tensor, ScalarShaped Scalar>
+constexpr auto operator*(Scalar scalar, const Tensor &tensor) {
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor { return {(scalar * tensor[Is])...}; }
+    (std::make_index_sequence<dimension_v<Tensor, 0>>{});
 }
 
 // ================================================================
 // division
 
-constexpr auto operator/(const auto &tensor1, const auto &tensor2)
-    requires(TensorShaped<std::decay_t<decltype(tensor1)>> && TensorShaped<std::decay_t<decltype(tensor2)>> &&
-             Broadcastable<std::decay_t<decltype(tensor1)>, std::decay_t<decltype(tensor2)>>)
+template <TensorShaped Tensor1, TensorShaped Tensor2>
+constexpr auto operator/(const Tensor1 &tensor_1, const Tensor2 &tensor_2)
+    requires Broadcastable<Tensor1, Tensor2>
 {
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor1)>{(tensor1[Is] / tensor2[Is])...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor1)>, 0>>{});
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor1 { return {(tensor_1[Is] / tensor_2[Is])...}; }
+    (std::make_index_sequence<dimension_v<Tensor1, 0>>{});
 }
 
-constexpr auto operator/(const auto &tensor, auto scalar)
-    requires(TensorShaped<std::decay_t<decltype(tensor)>> && ScalarShaped<std::decay_t<decltype(scalar)>>)
-{
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor)>{(tensor[Is] / scalar)...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
+template <TensorShaped Tensor, ScalarShaped Scalar>
+constexpr auto operator/(const Tensor &tensor, Scalar scalar) {
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor { return {(tensor[Is] / scalar)...}; }
+    (std::make_index_sequence<dimension_v<Tensor, 0>>{});
 }
 
-constexpr auto operator/(auto scalar, const auto &tensor)
-    requires(TensorShaped<std::decay_t<decltype(tensor)>> && ScalarShaped<std::decay_t<decltype(scalar)>>)
-{
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(tensor)>{(scalar / tensor[Is])...};
-    }
-    (std::make_index_sequence<dimension_v<std::decay_t<decltype(tensor)>, 0>>{});
+template <TensorShaped Tensor, ScalarShaped Scalar>
+constexpr auto operator/(Scalar scalar, const Tensor &tensor) {
+    return [&]<auto... Is>(std::index_sequence<Is...>)->Tensor { return {(scalar / tensor[Is])...}; }
+    (std::make_index_sequence<dimension_v<Tensor, 0>>{});
 }
 
 // ================================================================
 // dot
 
 constexpr auto sum(const auto &tensor) {
-    return std::accumulate(std::begin(tensor), std::end(tensor), std::decay_t<decltype(tensor[0])>{});
+    return std::accumulate(std::begin(tensor), std::end(tensor), decltype(tensor[0]){});
 }
 
 constexpr auto dot(const auto &tensor1, const auto &tensor2) { return sum(tensor1 * tensor2); }
@@ -236,5 +204,20 @@ constexpr auto dot(const auto &tensor1, const auto &tensor2) { return sum(tensor
 constexpr auto norm(const auto &tensor) { return rendex::math::sqrt(dot(tensor, tensor)); }
 
 constexpr auto normalized(const auto &tensor) { return tensor / norm(tensor); }
+
+// ================================================================
+// elemwise
+
+template <typename Tensor>
+constexpr auto elemwise(auto &&function, Tensor &&tensor) {
+    if constexpr (ScalarShaped<std::decay_t<Tensor>>) {
+        return std::forward<decltype(function)>(function)(std::forward<Tensor>(tensor));
+    } else {
+        return [&]<auto... Is>(std::index_sequence<Is...>)->std::decay_t<Tensor> {
+            return {elemwise(function, tensor[Is])...};
+        }
+        (std::make_index_sequence<dimension_v<std::decay_t<Tensor>, 0>>{});
+    }
+}
 
 }  // namespace rendex::tensor

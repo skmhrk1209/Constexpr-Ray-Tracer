@@ -5,25 +5,21 @@
 
 namespace rendex::random {
 
-template <typename Type, typename Generator = LCG<>>
+template <typename T>
 class Uniform {
    public:
-    using Float = Type;
-    using UInt = typename Generator::Type;
-
     constexpr Uniform() = default;
 
-    constexpr Uniform(Float min, Float max, UInt seed) : m_min(min), m_max(max), m_random(seed) {}
+    constexpr Uniform(T min, T max) : m_min(min), m_max(max) {}
 
-    constexpr auto operator()() {
-        m_random = Generator()(m_random);
-        return rendex::math::lerp(m_random, Generator::min, Generator::max, m_min, m_max);
+    template <typename G>
+    constexpr auto operator()(G& generator) const {
+        return rendex::math::lerp(generator(), G::min, G::max, m_min, m_max);
     }
 
    private:
-    Float m_min;
-    Float m_max;
-    UInt m_random;
+    T m_min;
+    T m_max;
 };
 
 }  // namespace rendex::random

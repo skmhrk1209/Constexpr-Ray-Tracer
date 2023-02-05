@@ -10,11 +10,21 @@ constexpr auto now() {
 }
 
 template <typename T = std::uint_fast32_t, T A = 48271u, T B = 0u, T M = (1u << 31) - 1>
-struct LCG {
-    using Type = T;
+class LCG {
+   public:
     static constexpr auto min = 0;
     static constexpr auto max = M;
-    constexpr auto operator()(auto x) { return (A * x + B) % M; }
+
+    constexpr LCG() = default;
+    constexpr LCG(T random) : m_random(random){};
+
+    constexpr auto operator()() {
+        m_random = (A * m_random + B) % M;
+        return m_random;
+    }
+
+   private:
+    T m_random;
 };
 
 }  // namespace rendex::random

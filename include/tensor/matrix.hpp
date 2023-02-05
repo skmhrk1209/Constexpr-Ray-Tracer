@@ -18,21 +18,19 @@ struct LazyMatMul : std::tuple<Matrix1, Matrix2> {
 // ================================================================
 // multiplication
 
-constexpr auto operator%(const auto &matrix1, const auto &matrix2)
-    requires(MatrixShaped<std::decay_t<decltype(matrix1)>> && MatrixShaped<std::decay_t<decltype(matrix2)>> &&
-             dimension_v<std::decay_t<decltype(matrix1)>, 1> == dimension_v<std::decay_t<decltype(matrix2)>, 0>)
+template <typename Matrix1, typename Matrix2>
+constexpr auto operator%(const Matrix1 &matrix_1, const Matrix2 &matrix_2)
+    requires MatrixShaped<Matrix1> && MatrixShaped<Matrix2> && (dimension_v<Matrix1, 1> == dimension_v<Matrix2, 0>)
 {
-    return LazyMatMul<decltype(matrix1), decltype(matrix2)>(std::tie(matrix1, matrix2));
+    return LazyMatMul<Matrix1, Matrix2>(std::tie(matrix_1, matrix_2));
 }
 
-constexpr auto operator%(const auto &matrix, const auto &vector)
-    requires(MatrixShaped<std::decay_t<decltype(matrix)>> && VectorShaped<std::decay_t<decltype(vector)>> &&
-             dimension_v<std::decay_t<decltype(matrix)>, 0> == dimension_v<std::decay_t<decltype(vector)>, 0> &&
-             dimension_v<std::decay_t<decltype(matrix)>, 1> == dimension_v<std::decay_t<decltype(vector)>, 0>)
+template <typename Matrix, typename Vector>
+constexpr auto operator%(const Matrix &matrix, const Vector &vector)
+    requires MatrixShaped<Matrix> && VectorShaped<Vector> && (dimension_v<Matrix, 0> == dimension_v<Vector, 0>) &&
+             (dimension_v<Matrix, 1> == dimension_v<Vector, 0>)
 {
-    return [&]<auto... Is>(std::index_sequence<Is...>) {
-        return std::decay_t<decltype(vector)>{dot(matrix[Is], vector)...};
-    }
+    return [&]<auto... Is>(std::index_sequence<Is...>) { return Vector{dot(matrix[Is], vector)...}; }
     (std::make_index_sequence<dimension_v<std::decay_t<decltype(matrix)>, 0>>{});
 }
 

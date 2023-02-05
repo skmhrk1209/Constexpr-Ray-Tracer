@@ -4,19 +4,21 @@
 #include "tensor.hpp"
 
 namespace rendex::camera {
-template <typename Scalar, typename Vector = rendex::tensor::Vector<Scalar, 3>,
-          typename Matrix = rendex::tensor::Matrix<Scalar, 3, 3>>
+template <typename Scalar, template <typename, auto> typename Vector = rendex::tensor::Vector,
+          template <typename, auto, auto> typename Matrix = rendex::tensor::Matrix>
 class Camera {
    public:
     constexpr Camera() = default;
 
-    constexpr Camera(Scalar vertical_fov, Scalar aspect_ratio, const Vector &position, const Matrix &orientation)
+    constexpr Camera(Scalar vertical_fov, Scalar aspect_ratio, const Vector<Scalar, 3> &position,
+                     const Matrix<Scalar, 3, 3> &orientation)
         : m_vertical_fov(vertical_fov),
           m_aspect_ratio(aspect_ratio),
           m_position(position),
           m_orientation(orientation) {}
 
-    constexpr Camera(Scalar vertical_fov, Scalar aspect_ratio, const Vector &&position, const Matrix &&orientation)
+    constexpr Camera(Scalar vertical_fov, Scalar aspect_ratio, Vector<Scalar, 3> &&position,
+                     Matrix<Scalar, 3, 3> &&orientation)
         : m_vertical_fov(vertical_fov),
           m_aspect_ratio(aspect_ratio),
           m_position(std::move(position)),
@@ -39,13 +41,13 @@ class Camera {
         auto viewport_width = viewport_height * m_aspect_ratio;
         auto x = rendex::math::lerp(u, 0.0, 1.0, -viewport_width / 2.0, viewport_width / 2.0);
         auto y = rendex::math::lerp(v, 0.0, 1.0, -viewport_height / 2.0, viewport_height / 2.0);
-        return Ray<Scalar, Vector>{Vector{}, rendex::tensor::normalized(Vector{x, y, 1.0})};
+        return Ray<Scalar, Vector>{Vector<Scalar, 3>{}, rendex::tensor::normalized(Vector<Scalar, 3>{x, y, 1.0})};
     }
 
    private:
     Scalar m_vertical_fov;
     Scalar m_aspect_ratio;
-    Vector m_position;
-    Matrix m_orientation;
+    Vector<Scalar, 3> m_position;
+    Matrix<Scalar, 3, 3> m_orientation;
 };
 }  // namespace rendex::camera

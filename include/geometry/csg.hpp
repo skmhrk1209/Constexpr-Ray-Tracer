@@ -17,7 +17,7 @@ class CSG {
     constexpr CSG(const Geometry1 &geometry_1, const Geometry2 &geometry_2)
         : m_geometry_1(geometry_1), m_geometry_2(geometry_2) {}
 
-    constexpr CSG(const Geometry1 &&geometry_1, const Geometry2 &&geometry_2)
+    constexpr CSG(Geometry1 &&geometry_1, Geometry2 &&geometry_2)
         : m_geometry_1(std::move(geometry_1)), m_geometry_2(std::move(geometry_2)) {}
 
     constexpr auto distance(const auto &position) const {
@@ -55,9 +55,6 @@ struct UnionOp {
     }
 };
 
-template <typename Geometry1, typename Geometry2>
-using Union = CSG<Geometry1, Geometry2, UnionOp>;
-
 struct SubtractionOp {
     template <typename T>
     constexpr auto operator()(const T &x, const T &y) const {
@@ -67,9 +64,6 @@ struct SubtractionOp {
             return x > -y;
     }
 };
-
-template <typename Geometry1, typename Geometry2>
-using Subtraction = CSG<Geometry1, Geometry2, SubtractionOp>;
 
 struct IntersectionOp {
     template <typename T>
@@ -82,6 +76,28 @@ struct IntersectionOp {
 };
 
 template <typename Geometry1, typename Geometry2>
+using Union = CSG<Geometry1, Geometry2, UnionOp>;
+
+template <typename Geometry1, typename Geometry2>
+using Subtraction = CSG<Geometry1, Geometry2, SubtractionOp>;
+
+template <typename Geometry1, typename Geometry2>
 using Intersection = CSG<Geometry1, Geometry2, IntersectionOp>;
+
+template <typename Geometry1, typename Geometry2>
+constexpr auto construct_union(Geometry1 &&geometry_1, Geometry2 &&geometry_2) {
+    return Union<Geometry1, Geometry2>(std::forward<Geometry1>(geometry_1), std::forward<Geometry2>(geometry_2));
+}
+
+template <typename Geometry1, typename Geometry2>
+constexpr auto construct_subtraction(Geometry1 &&geometry_1, Geometry2 &&geometry_2) {
+    return Subtraction<Geometry1, Geometry2>(std::forward<Geometry1>(geometry_1), std::forward<Geometry2>(geometry_2));
+}
+
+template <typename Geometry1, typename Geometry2>
+constexpr auto construct_intersection(Geometry1 &&geometry_1, Geometry2 &&geometry_2) {
+    return Intersection<Geometry1, Geometry2>(std::forward<Geometry1>(geometry_1),
+                                              std::forward<Geometry2>(geometry_2));
+}
 
 }  // namespace rendex::geometry

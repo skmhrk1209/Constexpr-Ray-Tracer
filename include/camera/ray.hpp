@@ -3,14 +3,15 @@
 #include "tensor.hpp"
 
 namespace rendex::camera {
-template <typename Scalar, typename Vector = rendex::tensor::Vector<Scalar, 3>>
+template <typename Scalar, template <typename, auto> typename Vector = rendex::tensor::Vector>
 class Ray {
    public:
     constexpr Ray() = default;
 
-    constexpr Ray(const Vector &position, const Vector &direction) : m_position(position), m_direction(direction) {}
+    constexpr Ray(const Vector<Scalar, 3> &position, const Vector<Scalar, 3> &direction)
+        : m_position(position), m_direction(direction) {}
 
-    constexpr Ray(const Vector &&position, const Vector &&direction)
+    constexpr Ray(Vector<Scalar, 3> &&position, Vector<Scalar, 3> &&direction)
         : m_position(std::move(position)), m_direction(std::move(direction)) {}
 
     constexpr auto &position() { return m_position; }
@@ -23,7 +24,7 @@ class Ray {
     constexpr auto advanced(auto distance) const { return m_position + m_direction * distance; }
 
    private:
-    Vector m_position;
-    Vector m_direction;
+    Vector<Scalar, 3> m_position;
+    Vector<Scalar, 3> m_direction;
 };
 }  // namespace rendex::camera
