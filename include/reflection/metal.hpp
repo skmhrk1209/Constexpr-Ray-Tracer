@@ -4,6 +4,7 @@
 
 #include "camera.hpp"
 #include "common.hpp"
+#include "math.hpp"
 #include "random.hpp"
 #include "tensor.hpp"
 #include "utilities.hpp"
@@ -28,16 +29,16 @@ class Metal {
     constexpr const auto &fuzziness() const { return m_fuzziness; }
 
     constexpr auto operator()(const auto &ray, const auto &normal, auto &generator) const {
-        auto complex_reflectance = rendex::math::pow((1.0 - m_refractive_index) / (1.0 + m_refractive_index), 2);
+        auto complex_reflectance = rendex::math::square((1.0 - m_refractive_index) / (1.0 + m_refractive_index));
         auto specular_reflectance = [&]<auto... Is>(std::index_sequence<Is...>) {
-            return Vector<Scalar, 3>{std::abs(complex_reflectance[Is])...};
+            return Vector<Scalar, 3>{rendex::math::abs(complex_reflectance[Is])...};
         }
         (std::make_index_sequence<rendex::tensor::dimension_v<Vector<std::complex<Scalar>, 3>, 0>>{});
         auto cosine = -rendex::tensor::dot(ray.direction(), normal);
         auto fresnel_reflectance = schlick_approx(specular_reflectance, cosine);
         auto reflected_position = ray.position() + 1e-6 * normal;
         auto reflected_direction = reflect(ray.direction(), normal);
-        auto random_direction = random_in_unit_sphere<Scalar, Vector>(m_uniform, generator) * m_fuzziness;
+        auto random_direction = rendex::random::uniform_in_unit_sphere<Scalar, Vector>(generator) * m_fuzziness;
         auto fuzzy_reflected_direction = rendex::tensor::normalized(reflected_direction + random_direction);
         rendex::camera::Ray<Scalar, Vector> reflected_ray(reflected_position, fuzzy_reflected_direction);
         return std::make_tuple(reflected_ray, fresnel_reflectance);
@@ -46,7 +47,6 @@ class Metal {
    private:
     Vector<std::complex<Scalar>, 3> m_refractive_index;
     Scalar m_fuzziness;
-    rendex::random::Uniform<Scalar> m_uniform{0.0, 1.0};
 };
 
 }  // namespace rendex::reflection

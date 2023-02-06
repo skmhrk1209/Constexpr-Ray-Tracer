@@ -2,6 +2,8 @@
 
 #include <tuple>
 
+namespace rendex {
+
 // Apply a function to each element of a tuple.
 template <auto... Is>
 constexpr auto for_each_impl(auto &&tuple, auto &&function, std::index_sequence<Is...>) {
@@ -16,4 +18,6 @@ constexpr auto for_each_impl(auto &&tuple, auto &&function, std::index_sequence<
 constexpr auto for_each(auto &&tuple, auto &&function) {
     for_each_impl(std::forward<decltype(tuple)>(tuple), std::forward<decltype(function)>(function),
                   std::make_index_sequence<std::tuple_size_v<decltype(tuple)>>());
+}
+
 }

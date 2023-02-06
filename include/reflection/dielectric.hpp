@@ -50,19 +50,19 @@ class Dielectric {
         auto sine = rendex::math::sqrt(1.0 - cosine * cosine);
         auto local_normal = cosine > 0 ? normal : -normal;
         auto refractive_index = cosine > 0 ? m_refractive_index : 1.0 / m_refractive_index;
-        auto specular_reflectance = rendex::math::pow((1.0 - refractive_index) / (1.0 + refractive_index), 2);
+        auto specular_reflectance = rendex::math::square((1.0 - refractive_index) / (1.0 + refractive_index));
         auto fresnel_reflectance = schlick_approx(specular_reflectance, std::abs(cosine));
-        if (sine > refractive_index || m_uniform(generator) < fresnel_reflectance) {
+        if (sine > refractive_index || rendex::random::uniform(generator, 0.0, 1.0) < fresnel_reflectance) {
             auto reflected_position = ray.position() + 1e-6 * local_normal;
             auto reflected_direction = reflect(ray.direction(), local_normal);
-            auto random_direction = random_in_unit_sphere<Scalar, Vector>(m_uniform, generator) * m_fuzziness;
+            auto random_direction = rendex::random::uniform_in_unit_sphere<Scalar, Vector>(generator) * m_fuzziness;
             auto fuzzy_reflected_direction = rendex::tensor::normalized(reflected_direction + random_direction);
             rendex::camera::Ray<Scalar, Vector> reflected_ray(reflected_position, fuzzy_reflected_direction);
             return std::make_tuple(reflected_ray, Vector<Scalar, 3>{1.0, 1.0, 1.0});
         } else {
-            if (m_uniform(generator) < m_scatterness) {
+            if (rendex::random::uniform(generator, 0.0, 1.0) < m_scatterness) {
                 auto scattered_position = ray.position() + 1e-6 * local_normal;
-                auto random_direction = random_on_unit_sphere<Scalar, Vector>(m_uniform, generator);
+                auto random_direction = rendex::random::uniform_on_unit_sphere<Scalar, Vector>(generator);
                 auto scattered_direction = rendex::tensor::normalized(local_normal + random_direction);
                 rendex::camera::Ray<Scalar, Vector> scattered_ray(scattered_position, scattered_direction);
                 return std::make_tuple(scattered_ray, m_albedo);
@@ -81,7 +81,6 @@ class Dielectric {
     Scalar m_refractive_index;
     Scalar m_scatterness;
     Scalar m_fuzziness;
-    rendex::random::Uniform<Scalar> m_uniform{0.0, 1.0};
 };
 
 }  // namespace rendex::reflection

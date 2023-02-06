@@ -39,8 +39,8 @@ class Sphere {
         auto d = b * b - a * c;
 
         if (d >= 0) {
-            auto distance_1 = (-b - std::sqrt(d)) / a;
-            auto distance_2 = (-b + std::sqrt(d)) / a;
+            auto distance_1 = (-b - rendex::math::sqrt(d)) / a;
+            auto distance_2 = (-b + rendex::math::sqrt(d)) / a;
             if (distance_1 > 0.0 || distance_2 > 0.0) {
                 auto distance =
                     distance_1 > 0.0 ? distance_2 > 0.0 ? std::min(distance_1, distance_2) : distance_1 : distance_2;
@@ -58,10 +58,7 @@ class Sphere {
         return std::make_tuple(Geometry<Scalar, Vector>(*this), distance);
     }
 
-    constexpr auto normal(const auto &position) const {
-        // return (position - m_position) / rendex::tensor::norm(position - m_position);
-        return (position - m_position) / m_radius;
-    }
+    constexpr auto normal(const auto &position) const { return (position - m_position) / m_radius; }
 
    private:
     Scalar m_radius;

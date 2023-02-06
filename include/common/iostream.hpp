@@ -5,6 +5,9 @@
 #include <variant>
 
 #include "algorithm.hpp"
+#include "type_traits.hpp"
+
+namespace rendex {
 
 template <typename T>
 concept Iterable = requires(T x) { std::begin(x), std::end(x); };
@@ -62,3 +65,5 @@ decltype(auto) operator<<(std::ostream &ostream, const Iterable auto &container)
     ostream << "]";
     return ostream;
 }
+
+}  // namespace rendex
