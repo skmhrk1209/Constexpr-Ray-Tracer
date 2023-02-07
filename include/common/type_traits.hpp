@@ -26,4 +26,19 @@ struct is_optional<std::optional<T>> : std::true_type {};
 template <typename T>
 constexpr auto is_optional_v = is_optional<T>::value;
 
+template <typename>
+struct is_string : std::false_type {};
+
+template <typename Char, typename Traits, typename Allocator>
+struct is_string<std::basic_string<Char, Traits, Allocator>> : std::true_type {};
+
+template <typename T>
+constexpr auto is_string_v = is_string<T>::value;
+
+template <typename T>
+concept Iterable = requires(T x) { std::begin(x), std::end(x); };
+
+template <typename T>
+concept Indexable = requires(T x) { x[std::declval<std::size_t>()]; };
+
 }  // namespace rendex

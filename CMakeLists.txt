@@ -1,7 +1,12 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -pg")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -s -DNDEBUG -march=native")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g3 -Og -pg")
+set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -s -DNDEBUG -march=native")
 
 project(
     ray_tracer
@@ -9,16 +14,16 @@ project(
     LANGUAGES CXX
 )
 
+find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
+find_package(OpenCL REQUIRED)
+
 set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
 set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
-
-find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenCL REQUIRED)
 
 add_executable(
     ray_tracer
     ${SOURCE_DIR}/main.cpp
+    $ENV{INSTANTIATED_SOURCES}
 )
 target_include_directories(
     ray_tracer PRIVATE
@@ -31,6 +36,5 @@ target_link_libraries(
     Boost::system
     Boost::filesystem
     Boost::program_options
-    Eigen3::Eigen
     OpenCL::OpenCL
 )

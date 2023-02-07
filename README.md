@@ -1,1 +1,25 @@
 # Constexpr Ray Tracer
+
+This repository provides a C++ program that renders a predefined scene at compile time using constexpr functions and just saves the rendered image at run time. Simple path tracing and sphere tracing have been implemented as rendering methods, but I'm aiming to implement more rigorous physically based rendering in the future.
+
+## Separate Rendering
+
+Since rendering a high-resolution image at once would cause the compiler to eat up memory, we support separate rendering that splits all the pixels into small-sized chunks and renders each one. It is implemented by specializing and instantiating a templated rendering function that takes an area to be rendered as a template argument and compiling each translation unit.
+
+I provide a python script that takes the size of the image to be rendered and the number of pixels in each chunk as inputs and automatically generates source files each of which instantiates the function template with the corresponding area. The usage of the script is as follows:
+
+```bash
+usage: instantiate.py [-h] [-T TYPE] [-W WIDTH] [-H HEIGHT] [-S SAMPLES] [-N CHUNK_SIZE]
+
+Automatic Instantiation for Separate Rendering
+
+optional arguments:
+  -h, --help                                show this help message and exit
+  -T TYPE, --type TYPE                      Floating-point type used for rendering
+  -W WIDTH, --width WIDTH                   Width of the image to be rendered
+  -H HEIGHT, --height HEIGHT                Height of the image to be rendered
+  -S SAMPLES, --samples SAMPLES             Number of samples for MSAA (Multi-Sample Anti-Aliasing)
+  -N CHUNK_SIZE, --chunk_size CHUNK_SIZE    Number of pixels in each chunk
+```
+
+The generated source files are included in the CMakeLists.txt via an environment variable.

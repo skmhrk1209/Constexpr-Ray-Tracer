@@ -2,10 +2,10 @@
 
 #include <numbers>
 
+#include "common.hpp"
 #include "random.hpp"
 #include "ray.hpp"
 #include "tensor.hpp"
-#include "common.hpp"
 
 namespace rendex::camera {
 template <typename Scalar, template <typename, auto> typename Vector = rendex::tensor::Vector,

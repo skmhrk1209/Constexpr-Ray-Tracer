@@ -9,9 +9,6 @@
 
 namespace rendex {
 
-template <typename T>
-concept Iterable = requires(T x) { std::begin(x), std::end(x); };
-
 template <typename... Ts>
 decltype(auto) operator>>(std::istream &istream, std::tuple<Ts...> &tuple) {
     for_each(tuple, [&istream](auto &element) { istream >> element; });
@@ -50,16 +47,22 @@ decltype(auto) operator<<(std::ostream &ostream, const std::variant<T, Ts...> &v
     return ostream;
 }
 
-decltype(auto) operator>>(std::istream &istream, Iterable auto &container) {
-    for (auto &element : container) {
+template <typename T>
+decltype(auto) operator>>(std::istream &istream, T &iterable)
+    requires(rendex::Iterable<T> && !rendex::is_string_v<T>)
+{
+    for (auto &element : iterable) {
         istream >> element;
     }
     return istream;
 }
 
-decltype(auto) operator<<(std::ostream &ostream, const Iterable auto &container) {
+template <typename T>
+decltype(auto) operator<<(std::ostream &ostream, const T &iterable)
+    requires(rendex::Iterable<T> && !rendex::is_string_v<T>)
+{
     ostream << "[ ";
-    for (const auto &element : container) {
+    for (const auto &element : iterable) {
         ostream << element << " ";
     }
     ostream << "]";

@@ -14,14 +14,11 @@ namespace rendex::tensor {
 // ================================================================
 // class
 
-template <typename T>
-concept Indexable = requires(T x) { x[std::declval<std::size_t>()]; };
-
 template <template <typename, auto> typename Array, typename T, auto N, auto... Ns>
 struct GenericTensorImpl : Array<GenericTensorImpl<Array, T, Ns...>, N> {};
 
 template <template <typename, auto> typename Array, typename T, auto N>
-    requires Indexable<Array<T, N>>
+    requires rendex::Indexable<Array<T, N>>
 struct GenericTensorImpl<Array, T, N> : Array<T, N> {};
 
 template <template <typename, auto> typename Array, typename T, auto... Ns>
