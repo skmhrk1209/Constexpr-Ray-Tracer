@@ -4,7 +4,7 @@ This repository provides a C++ program that renders a predefined scene at compil
 
 ## Separate Rendering
 
-Since rendering a high-resolution image at once would cause the compiler to eat up memory, we support separate rendering that splits all the pixels into small-sized chunks and renders each one. It is implemented by specializing and instantiating a templated rendering function that takes an area to be rendered as a template argument and compiling each translation unit.
+Since rendering a high-resolution image at once would cause the compiler to eat up memory, we support separate rendering that splits all the pixels into small-sized chunks and renders each one. It is implemented by instantiating a templated rendering function that takes an area to be rendered as a template argument and compiling each translation unit.
 
 I provide a python script that takes the size of the image to be rendered and the number of pixels in each chunk as inputs and automatically generates source files each of which instantiates the function template with the corresponding area. The usage of the script is as follows:
 
