@@ -1,6 +1,6 @@
 
-#include <execution>
 #include <numbers>
+#include <type_traits>
 
 #include "camera.hpp"
 #include "common.hpp"
@@ -12,7 +12,7 @@
 #include "rendering.hpp"
 #include "tensor.hpp"
 
-template <typename T, auto W, auto H, auto S, auto I, auto N>
+template <typename T, auto W, auto H, auto N, auto I>
 constexpr auto render() {
     using namespace std::literals::complex_literals;
 
@@ -25,8 +25,7 @@ constexpr auto render() {
                 1000.0, rendex::tensor::Vector<T, 3>{0.0, 1000.0, 0.0},
                 rendex::reflection::Dielectric<T>(rendex::tensor::Vector<T, 3>{0.5, 0.5, 0.5}, {}, 1.0, 1.0, 0.0)),
             rendex::geometry::construct_union(
-                // left sphere (hollow Glass)
-                // right sphere (gold)
+                // left sphere (gold)
                 rendex::geometry::Sphere<T, rendex::tensor::Vector, rendex::reflection::Metal>(
                     1.0, rendex::tensor::Vector<T, 3>{-3.0, -1.0, 0.0},
                     rendex::reflection::Metal<T, rendex::tensor::Vector>(
@@ -85,7 +84,7 @@ constexpr auto render() {
                                          return sphere;
                                  }](
                                 auto &&...args) { return function(function, std::forward<decltype(args)>(args)...); }(
-                                std::make_index_sequence<240>{}),
+                                std::make_index_sequence<200>{}),
                             rendex::geometry::construct_union(
                                 // tiny sphere (transmission only)
                                 [function =
@@ -118,7 +117,7 @@ constexpr auto render() {
                                      }](
                                     auto
                                         &&...args) { return function(function, std::forward<decltype(args)>(args)...); }(
-                                    std::make_index_sequence<120>{}),
+                                    std::make_index_sequence<100>{}),
                                 // tiny sphere (reflection only)
                                 [function = [&]<auto J, auto... Js>(auto self,
                                                                     std::index_sequence<J, Js...>) constexpr {
@@ -149,7 +148,7 @@ constexpr auto render() {
                                         return sphere;
                                 }](auto &&...args) {
                                     return function(function, std::forward<decltype(args)>(args)...);
-                                }(std::make_index_sequence<40>{})))))));
+                                }(std::make_index_sequence<50>{})))))));
     }();
 
     rendex::geometry::Sphere<T> bounds(1000.0, rendex::tensor::Vector<T, 3>{}, rendex::reflection::Dielectric<T>{});
@@ -182,13 +181,14 @@ constexpr auto render() {
 
     // parameters
 
+    auto num_samples = 50;
     auto max_depth = 50;
     auto max_steps = 1000;
     auto epsilon = 1e-3;
 
     // rendering
 
-    auto colors = rendex::rendering::ray_tracing<T, W, H, S, I, N>(object, camera, background, max_depth);
+    auto colors = rendex::rendering::ray_tracing<T, W, H, N, I>(object, camera, background, num_samples, max_depth);
 
     // gamma correction
     std::transform(std::begin(colors), std::end(colors), std::begin(colors),
@@ -196,3 +196,8 @@ constexpr auto render() {
 
     return colors;
 }
+
+template <typename T, auto W, auto H, auto N, auto I>
+const std::invoke_result_t<decltype(render<T, W, H, N, I>)> &fetch() {
+    return {};
+};

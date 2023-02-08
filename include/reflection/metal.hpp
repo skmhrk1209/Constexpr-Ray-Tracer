@@ -41,7 +41,7 @@ class Metal {
         auto random_direction = rendex::random::uniform_in_unit_sphere<Scalar, Vector>(generator) * m_fuzziness;
         auto fuzzy_reflected_direction = rendex::tensor::normalized(reflected_direction + random_direction);
         rendex::camera::Ray<Scalar, Vector> reflected_ray(reflected_position, fuzzy_reflected_direction);
-        return std::make_tuple(reflected_ray, fresnel_reflectance);
+        return std::make_tuple(std::move(reflected_ray), std::move(fresnel_reflectance));
     }
 
    private:

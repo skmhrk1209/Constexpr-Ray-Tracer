@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace rendex::random {
 
 template <typename T = std::uint_fast32_t>

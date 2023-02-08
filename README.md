@@ -9,17 +9,16 @@ Since rendering a high-resolution image at once would cause the compiler to eat 
 I provide a python script that takes the size of the image to be rendered and the number of pixels in each chunk as inputs and automatically generates source files each of which instantiates the function template with the corresponding area. The usage of the script is as follows:
 
 ```bash
-usage: instantiate.py [-h] [-T TYPE] [-W WIDTH] [-H HEIGHT] [-S SAMPLES] [-N CHUNK_SIZE]
+usage: instantiate.py [-h] [-T TYPE] [-W WIDTH] [-H HEIGHT] [-N CHUNKS]
 
 Automatic Instantiation for Separate Rendering
 
 optional arguments:
-  -h, --help                                show this help message and exit
-  -T TYPE, --type TYPE                      Floating-point type used for rendering
-  -W WIDTH, --width WIDTH                   Width of the image to be rendered
-  -H HEIGHT, --height HEIGHT                Height of the image to be rendered
-  -S SAMPLES, --samples SAMPLES             Number of samples for MSAA (Multi-Sample Anti-Aliasing)
-  -N CHUNK_SIZE, --chunk_size CHUNK_SIZE    Number of pixels in each chunk
+  -h, --help                  show this help message and exit
+  -T TYPE, --type TYPE        Floating-point type used for rendering
+  -W WIDTH, --width           WIDTH Width of the image to be rendered
+  -H HEIGHT, --height HEIGHT  Height of the image to be rendered
+  -N CHUNKS, --chunks CHUNKS  Number of chunks all the pixels are split into
 ```
 
-The generated source files are included in the CMakeLists.txt via an environment variable.
+The *CMakeLists.txt* is also re-generated based on the exsistent *.CMakeLists.txt* along with the auto-generation of source files.

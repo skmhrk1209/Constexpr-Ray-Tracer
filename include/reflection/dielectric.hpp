@@ -58,19 +58,19 @@ class Dielectric {
             auto random_direction = rendex::random::uniform_in_unit_sphere<Scalar, Vector>(generator) * m_fuzziness;
             auto fuzzy_reflected_direction = rendex::tensor::normalized(reflected_direction + random_direction);
             rendex::camera::Ray<Scalar, Vector> reflected_ray(reflected_position, fuzzy_reflected_direction);
-            return std::make_tuple(reflected_ray, Vector<Scalar, 3>{1.0, 1.0, 1.0});
+            return std::make_tuple(std::move(reflected_ray), Vector<Scalar, 3>{1.0, 1.0, 1.0});
         } else {
             if (rendex::random::uniform(generator, 0.0, 1.0) < m_scatterness) {
                 auto scattered_position = ray.position() + 1e-6 * local_normal;
                 auto random_direction = rendex::random::uniform_on_unit_sphere<Scalar, Vector>(generator);
                 auto scattered_direction = rendex::tensor::normalized(local_normal + random_direction);
                 rendex::camera::Ray<Scalar, Vector> scattered_ray(scattered_position, scattered_direction);
-                return std::make_tuple(scattered_ray, m_albedo);
+                return std::make_tuple(std::move(scattered_ray), m_albedo);
             } else {
                 auto transmitted_position = ray.position() - 1e-6 * local_normal;
                 auto transmitted_direction = refract(ray.direction(), local_normal, refractive_index);
                 rendex::camera::Ray<Scalar, Vector> transmitted_ray(transmitted_position, transmitted_direction);
-                return std::make_tuple(transmitted_ray, m_transmittance);
+                return std::make_tuple(std::move(transmitted_ray), m_transmittance);
             }
         }
     }

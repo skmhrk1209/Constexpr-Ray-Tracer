@@ -25,6 +25,7 @@ set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 add_executable(
     ray_tracer
     ${SOURCE_DIR}/main.cpp
+    ${INSTANTIATED_SOURCES}
 )
 target_include_directories(
     ray_tracer PRIVATE
