@@ -125,8 +125,6 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Separate Rendering Script")
-    parser.add_argument("--build", action="store_true", help="build mode")
-    parser.add_argument("--render", action="store_true", help="rendering mode")
     parser.add_argument("--max_workers", type=int, default=16, help="maximum number of workers for multiprocessing")
     parser.add_argument("--constexpr", action="store_true", help="whether to enable compile-time ray tracing")
     parser.add_argument("--image_width", type=int, default=1200, help="width of the image")

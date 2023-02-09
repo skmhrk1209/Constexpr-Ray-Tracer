@@ -4,21 +4,23 @@ This repository provides a C++ program that renders a predefined scene at compil
 
 ## Separate Rendering
 
-Since rendering a high-resolution image at once would cause the compiler to eat up memory, we support separate rendering that splits all the pixels into small-sized chunks and renders each one. It is implemented by instantiating a templated rendering function that takes an area to be rendered as a template argument and compiling each translation unit.
-
-I provide a python script that takes the size of the image to be rendered and the number of pixels in each chunk as inputs and automatically generates source files each of which instantiates the function template with the corresponding area. The usage of the script is as follows:
+Since rendering a high-resolution image at once would cause the compiler to eat up the memory, separate rendering, whereby all the pixels are split into small-sized chunks and each chunk is rendered separately, is supported. This approach is implemented on a Python script as parallel compilations. The usage of this script is as follows:
 
 ```bash
-usage: instantiate.py [-h] [-T TYPE] [-W WIDTH] [-H HEIGHT] [-N CHUNKS]
+usage: ray_tracing.py [-h] [--max_workers MAX_WORKERS] [--constexpr] [--image_width IMAGE_WIDTH] [--image_height IMAGE_HEIGHT] [--patch_width PATCH_WIDTH]
+                      [--patch_height PATCH_HEIGHT] [--max_depth MAX_DEPTH] [--num_samples NUM_SAMPLES] [--random_seed RANDOM_SEED]
 
-Automatic Instantiation for Separate Rendering
+Separate Rendering Script
 
 optional arguments:
-  -h, --help                  show this help message and exit
-  -T TYPE, --type TYPE        Floating-point type used for rendering
-  -W WIDTH, --width           WIDTH Width of the image to be rendered
-  -H HEIGHT, --height HEIGHT  Height of the image to be rendered
-  -N CHUNKS, --chunks CHUNKS  Number of chunks all the pixels are split into
+    -h, --help                  show this help message and exit
+    --constexpr                 whether to enable compile-time ray tracing
+    --image_width IMAGE_WIDTH   width of the image
+    --image_height IMAGE_HEIGHT height of the image
+    --patch_width PATCH_WIDTH   width of each patch
+    --patch_height PATCH_HEIGHT height of each patch
+    --max_depth MAX_DEPTH       maximum depth for recursive ray tracing
+    --num_samples NUM_SAMPLES   number of samples for MSAA (Multi-Sample Anti-Aliasing)
+    --random_seed RANDOM_SEED   random seed for Monte Carlo approximation
+    --max_workers MAX_WORKERS   maximum number of workers for multiprocessing
 ```
-
-The *CMakeLists.txt* is also re-generated based on the exsistent *.CMakeLists.txt* along with the auto-generation of source files.
