@@ -9,35 +9,36 @@
 
 namespace rendex::rendering {
 
-template <typename Scalar, auto Width, auto Height, auto NumChunks, auto ChunkIndex,
-          typename Generator = rendex::random::LCG<>>
-constexpr auto ray_tracing(const auto &object, const auto &camera, auto background, auto num_samples, auto max_depth) {
-#ifndef CONSTEXPR
-    boost::progress_timer progress_timer;
-    boost::progress_display progress_display(Width * Height);
+template <typename Scalar, auto ImageWidth, auto ImageHeight, auto PatchWidth, auto PatchHeight, auto PatchCoordX,
+          auto PatchCoordY, typename Generator = rendex::random::LCG<>>
+constexpr auto ray_tracing(const auto &object, const auto &camera, auto background, auto max_depth, auto num_samples,
+                           auto random_seed) {
+#if IS_CONSTANT_EVALUATED
 #else
+    boost::progress_timer progress_timer;
+    boost::progress_display progress_display(PatchWidth * PatchHeight);
 #endif
 
-    Generator generator(rendex::random::now());
+    Generator generator(random_seed);
 
-    constexpr auto ChunkSize = Width * Height / NumChunks;
-    std::array<rendex::tensor::Vector<Scalar, 2>, ChunkSize> coords;
-    for (auto pixel_index = ChunkSize * ChunkIndex; pixel_index < ChunkSize * (ChunkIndex + 1); ++pixel_index) {
-        coords[pixel_index - ChunkSize * ChunkIndex] =
-            rendex::tensor::Vector<Scalar, 2>{pixel_index % Width, pixel_index / Width};
+    std::vector<rendex::tensor::Vector<Scalar, 2>> coords;
+    for (auto coord_y = PatchHeight * PatchCoordY; coord_y < PatchHeight * (PatchCoordY + 1); ++coord_y) {
+        for (auto coord_x = PatchWidth * PatchCoordX; coord_x < PatchWidth * (PatchCoordX + 1); ++coord_x) {
+            coords.push_back(rendex::tensor::Vector<Scalar, 2>{coord_x, coord_y});
+        }
     }
 
-    std::array<rendex::tensor::Vector<Scalar, 3>, ChunkSize> colors;
+    std::array<rendex::tensor::Vector<Scalar, 3>, PatchWidth * PatchHeight> colors;
     std::transform(std::begin(coords), std::end(coords), std::begin(colors), [&](const auto &coord) {
         rendex::tensor::Vector<Scalar, 3> color{};
 
         for (auto sample_index = 0; sample_index < num_samples; ++sample_index) {
-            auto u = (coord[0] + rendex::random::uniform(generator, -0.5, 0.5)) / Width;
-            auto v = (coord[1] + rendex::random::uniform(generator, -0.5, 0.5)) / Height;
+            auto coord_u = (coord[0] + rendex::random::uniform(generator, -0.5, 0.5)) / ImageWidth;
+            auto coord_v = (coord[1] + rendex::random::uniform(generator, -0.5, 0.5)) / ImageHeight;
 
-            auto ray = camera.ray(u, v, generator);
+            auto ray = camera.ray(coord_u, coord_v, generator);
 
-            color = color + [&]() {
+            color = color + [&]() constexpr -> rendex::tensor::Vector<Scalar, 3> {
                 rendex::tensor::Vector<Scalar, 3> albedo{1.0, 1.0, 1.0};
                 for (auto depth = 0; depth < max_depth; ++depth) {
                     auto [geometry, distance] = object.intersect(ray);
@@ -57,13 +58,13 @@ constexpr auto ray_tracing(const auto &object, const auto &camera, auto backgrou
                         geometry);
                 }
 
-                return rendex::tensor::Vector<Scalar, 3>{};
+                return {};
             }();
         }
 
-#ifndef CONSTEXPR
-        ++progress_display;
+#if IS_CONSTANT_EVALUATED
 #else
+++progress_display;
 #endif
 
         return color / num_samples;

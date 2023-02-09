@@ -50,12 +50,12 @@ class Camera {
     constexpr auto &orientation() { return m_orientation; }
     constexpr const auto &orientation() const { return m_orientation; }
 
-    constexpr auto ray(auto u, auto v, auto &generator) const {
+    constexpr auto ray(auto coord_u, auto coord_v, auto &generator) const {
         auto viewport_height = 2.0 * std::tan(m_vertical_fov / 2.0);
         auto viewport_width = viewport_height * m_aspect_ratio;
-        auto x = rendex::math::lerp(u, 0.0, 1.0, -viewport_width / 2.0, viewport_width / 2.0);
-        auto y = rendex::math::lerp(v, 0.0, 1.0, -viewport_height / 2.0, viewport_height / 2.0);
-        auto target = m_position + m_orientation % Vector<Scalar, 3>{x, y, 1.0} * m_focus_distance;
+        auto coord_x = rendex::math::lerp(coord_u, 0.0, 1.0, -viewport_width / 2.0, viewport_width / 2.0);
+        auto coord_y = rendex::math::lerp(coord_v, 0.0, 1.0, -viewport_height / 2.0, viewport_height / 2.0);
+        auto target = m_position + m_orientation % Vector<Scalar, 3>{coord_x, coord_y, 1.0} * m_focus_distance;
         auto defocus = rendex::random::uniform_in_unit_circle<Scalar, Vector>(generator) * m_aperture_radius;
         auto position = m_position + m_orientation % defocus;
         auto direction = rendex::tensor::normalized(target - position);

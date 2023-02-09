@@ -30,7 +30,7 @@ template <MatrixShaped Matrix1, MatrixShaped Matrix2>
 constexpr auto operator%(const Matrix1 &matrix_1, const Matrix2 &matrix_2)
     requires(dimension_v<Matrix1, 1> == dimension_v<Matrix2, 0>)
 {
-    return LazyMatMul<const Matrix1 &, const Matrix2 &>(matrix_1, matrix_2);
+    return LazyMatMul<const Matrix1&, const Matrix2&>(matrix_1, matrix_2);
 }
 
 template <MatrixShaped Matrix, VectorShaped Vector>

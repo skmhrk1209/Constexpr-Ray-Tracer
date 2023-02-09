@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <fstream>
 
 namespace rendex::image {
@@ -13,7 +14,7 @@ auto write_ppm(const auto &filename, const auto &colors, auto width, auto height
 
     for (const auto &color : colors) {
         for (const auto &component : color) {
-            ostream << component * ((1 << 8) - 1) << " ";
+            ostream << +static_cast<std::uint8_t>(component * ((1 << 8) - 1)) << " ";
         }
         ostream << "\n";
     }
