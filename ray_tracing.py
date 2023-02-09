@@ -1,7 +1,4 @@
 import os
-import time
-import random
-import atexit
 import argparse
 import textwrap
 import itertools
@@ -125,7 +122,6 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Separate Rendering Script")
-    parser.add_argument("--max_workers", type=int, default=16, help="maximum number of workers for multiprocessing")
     parser.add_argument("--constexpr", action="store_true", help="whether to enable compile-time ray tracing")
     parser.add_argument("--image_width", type=int, default=1200, help="width of the image")
     parser.add_argument("--image_height", type=int, default=800, help="height of the image")
@@ -134,5 +130,6 @@ if __name__ == "__main__":
     parser.add_argument("--max_depth", type=int, default=50, help="maximum depth for recursive ray tracing")
     parser.add_argument("--num_samples", type=int, default=500, help="number of samples for MSAA (Multi-Sample Anti-Aliasing)")
     parser.add_argument("--random_seed", type=int, default=1, help="random seed for Monte Carlo approximation")
+    parser.add_argument("--max_workers", type=int, default=16, help="maximum number of workers for multiprocessing")
 
     main(parser.parse_args())
