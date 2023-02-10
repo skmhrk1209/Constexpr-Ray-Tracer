@@ -23,7 +23,7 @@ int main() {
         // rendering
         auto colors =
             coex::rendering::ray_tracing<Scalar, ImageWidth, ImageHeight, PatchWidth, PatchHeight, PatchCoordX,
-                                           PatchCoordY>(object, camera, background, MaxDepth, NumSamples, RandomSeed);
+                                         PatchCoordY>(object, camera, background, MaxDepth, NumSamples, RandomSeed);
 
         // gamma correction
         std::transform(std::begin(colors), std::end(colors), std::begin(colors),

@@ -28,7 +28,8 @@ def main(args):
     def render(patch_coord_x, patch_coord_y):
 
         with lock_guard(lock):
-            print(f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
+            print(
+                f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
             print(f"Rendering process has just been launched!")
 
         dirname = f"build/patch_{patch_coord_x}_{patch_coord_y}"
@@ -76,17 +77,18 @@ def main(args):
         while process.poll() is None:
 
             with lock_guard(lock):
-                print(f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
+                print(
+                    f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
                 print(process.stdout.readline())
 
         process.wait()
 
         return (patch_coord_x, patch_coord_y), process
 
-
     os.makedirs("outputs", exist_ok=True)
 
-    patch_coords_x, patch_coords_y = zip(*itertools.product(range(args.image_height // args.patch_height), range(args.image_width // args.patch_width)))
+    patch_coords_x, patch_coords_y = zip(
+        *itertools.product(range(args.image_height // args.patch_height), range(args.image_width // args.patch_width)))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_workers or os.cpu_count()) as executor:
 
@@ -99,7 +101,8 @@ def main(args):
             (patch_coord_x, patch_coord_y), process = future.result()
 
             with lock_guard(lock):
-                print(f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
+                print(
+                    f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
                 print("Rendering process failed..." if process.returncode else "Rendering process succeeded!")
 
             returncodes.append(process.returncode)
@@ -129,8 +132,10 @@ if __name__ == "__main__":
     parser.add_argument("--patch_width", type=int, default=300, help="width of each patch")
     parser.add_argument("--patch_height", type=int, default=200, help="height of each patch")
     parser.add_argument("--max_depth", type=int, default=50, help="maximum depth for recursive ray tracing")
-    parser.add_argument("--num_samples", type=int, default=500, help="number of samples for MSAA (Multi-Sample Anti-Aliasing)")
-    parser.add_argument("--random_seed", type=int, default=random.randrange(1 << 32), help="random seed for Monte Carlo approximation")
+    parser.add_argument("--num_samples", type=int, default=500,
+                        help="number of samples for MSAA (Multi-Sample Anti-Aliasing)")
+    parser.add_argument("--random_seed", type=int, default=random.randrange(1 << 32),
+                        help="random seed for Monte Carlo approximation")
     parser.add_argument("--max_workers", type=int, default=16, help="maximum number of workers for multiprocessing")
 
     main(parser.parse_args())

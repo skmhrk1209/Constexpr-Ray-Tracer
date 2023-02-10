@@ -41,7 +41,7 @@ class Metal {
         auto random_direction = coex::random::uniform_in_unit_sphere<Scalar, Vector>(generator) * m_fuzziness;
         auto fuzzy_reflected_direction = coex::tensor::normalized(reflected_direction + random_direction);
         coex::camera::Ray<Scalar, Vector> reflected_ray(std::move(reflected_position),
-                                                          std::move(fuzzy_reflected_direction));
+                                                        std::move(fuzzy_reflected_direction));
         return std::make_tuple(std::move(reflected_ray), std::move(fresnel_reflectance));
     }
 

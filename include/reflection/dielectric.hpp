@@ -37,13 +37,13 @@ class Dielectric {
             auto reflected_position = ray.position() + 1e-6 * inout_normal;
             auto reflected_direction = reflect(ray.direction(), inout_normal);
             coex::camera::Ray<Scalar, Vector> reflected_ray(std::move(reflected_position),
-                                                              std::move(reflected_direction));
+                                                            std::move(reflected_direction));
             return std::make_tuple(std::move(reflected_ray), Vector<Scalar, 3>{1.0, 1.0, 1.0});
         } else {
             auto refracted_position = ray.position() - 1e-6 * inout_normal;
             auto refracted_direction = refract(ray.direction(), inout_normal, refractive_index);
             coex::camera::Ray<Scalar, Vector> refracted_ray(std::move(refracted_position),
-                                                              std::move(refracted_direction));
+                                                            std::move(refracted_direction));
             return std::make_tuple(std::move(refracted_ray), m_albedo);
         }
     }

@@ -25,8 +25,7 @@ class Lambertian {
         auto scattered_position = ray.position() + 1e-6 * normal;
         auto random_direction = coex::random::uniform_on_unit_sphere<Scalar, Vector>(generator);
         auto scattered_direction = coex::tensor::normalized(normal + random_direction);
-        coex::camera::Ray<Scalar, Vector> scattered_ray(std::move(scattered_position),
-                                                          std::move(scattered_direction));
+        coex::camera::Ray<Scalar, Vector> scattered_ray(std::move(scattered_position), std::move(scattered_direction));
         return std::make_tuple(std::move(scattered_ray), m_albedo);
     }
 

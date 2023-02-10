@@ -52,26 +52,25 @@ inline constexpr auto object = []() constexpr {
                         // tiny sphere (scatteing only)
                         [function =
                              [&]<auto I, auto... Is>(auto self, std::index_sequence<I, Is...>) constexpr {
-                                 auto center = coex::random::uniform_in_unit_sphere<Scalar, coex::tensor::Vector>(
-                                                   generator) *
-                                               12.0;
+                                 auto center =
+                                     coex::random::uniform_in_unit_sphere<Scalar, coex::tensor::Vector>(generator) *
+                                     12.0;
                                  auto position = coex::tensor::Vector<Scalar, 3>{center[0], -0.2, center[1]};
 
                                  auto albedo = coex::tensor::elemwise(
                                      coex::math::square<Scalar>,
                                      coex::tensor::Vector<Scalar, 3>{coex::random::uniform(generator, 0.0, 1.0),
-                                                                       coex::random::uniform(generator, 0.0, 1.0),
-                                                                       coex::random::uniform(generator, 0.0, 1.0)});
+                                                                     coex::random::uniform(generator, 0.0, 1.0),
+                                                                     coex::random::uniform(generator, 0.0, 1.0)});
                                  auto refractive_index = coex::random::uniform(generator, 1.0, 2.0);
-                                 coex::geometry::Sphere<Scalar, coex::tensor::Vector,
-                                                          coex::reflection::Lambertian>
+                                 coex::geometry::Sphere<Scalar, coex::tensor::Vector, coex::reflection::Lambertian>
                                      sphere(0.2, std::move(position),
                                             coex::reflection::Lambertian<Scalar, coex::tensor::Vector>(
                                                 std::move(albedo)));
 
                                  if constexpr (sizeof...(Is))
-                                     return coex::geometry::construct_union(
-                                         std::move(sphere), self(self, std::index_sequence<Is...>{}));
+                                     return coex::geometry::construct_union(std::move(sphere),
+                                                                            self(self, std::index_sequence<Is...>{}));
                                  else
                                      return sphere;
                              }](auto &&...args) { return function(function, std::forward<decltype(args)>(args)...); }(
@@ -80,21 +79,18 @@ inline constexpr auto object = []() constexpr {
                             // tiny sphere (transmission only)
                             [function =
                                  [&]<auto I, auto... Is>(auto self, std::index_sequence<I, Is...>) constexpr {
-                                     auto center =
-                                         coex::random::uniform_in_unit_sphere<Scalar, coex::tensor::Vector>(
-                                             generator) *
-                                         12.0;
+                                     auto center = coex::random::uniform_in_unit_sphere<Scalar, coex::tensor::Vector>(
+                                                       generator) *
+                                                   12.0;
                                      auto position = coex::tensor::Vector<Scalar, 3>{center[0], -0.2, center[1]};
 
-                                     auto albedo =
-                                         coex::tensor::elemwise(coex::math::sqrt<Scalar>,
-                                                                  coex::tensor::Vector<Scalar, 3>{
-                                                                      coex::random::uniform(generator, 0.5, 1.0),
-                                                                      coex::random::uniform(generator, 0.5, 1.0),
-                                                                      coex::random::uniform(generator, 0.5, 1.0)});
+                                     auto albedo = coex::tensor::elemwise(
+                                         coex::math::sqrt<Scalar>,
+                                         coex::tensor::Vector<Scalar, 3>{coex::random::uniform(generator, 0.5, 1.0),
+                                                                         coex::random::uniform(generator, 0.5, 1.0),
+                                                                         coex::random::uniform(generator, 0.5, 1.0)});
                                      auto refractive_index = coex::random::uniform(generator, 1.0, 2.0);
-                                     coex::geometry::Sphere<Scalar, coex::tensor::Vector,
-                                                              coex::reflection::Dielectric>
+                                     coex::geometry::Sphere<Scalar, coex::tensor::Vector, coex::reflection::Dielectric>
                                          sphere(0.2, std::move(position),
                                                 coex::reflection::Dielectric<Scalar, coex::tensor::Vector>(
                                                     std::move(albedo), refractive_index));
@@ -123,14 +119,14 @@ inline constexpr auto object = []() constexpr {
                                         coex::random::uniform(generator, 0.0, 5.0) * 1i,
                                 };
                                 auto fuzziness = coex::random::uniform(generator, 0.0, 0.5);
-                                coex::geometry::Sphere<Scalar, coex::tensor::Vector, coex::reflection::Metal>
-                                    sphere(0.2, std::move(position),
-                                           coex::reflection::Metal<Scalar, coex::tensor::Vector>(
-                                               std::move(refractive_index), fuzziness));
+                                coex::geometry::Sphere<Scalar, coex::tensor::Vector, coex::reflection::Metal> sphere(
+                                    0.2, std::move(position),
+                                    coex::reflection::Metal<Scalar, coex::tensor::Vector>(std::move(refractive_index),
+                                                                                          fuzziness));
 
                                 if constexpr (sizeof...(Is))
                                     return coex::geometry::construct_union(std::move(sphere),
-                                                                             self(self, std::index_sequence<Is...>{}));
+                                                                           self(self, std::index_sequence<Is...>{}));
                                 else
                                     return sphere;
                             }](auto &&...args) {
@@ -154,10 +150,10 @@ inline constexpr auto camera = []() constexpr {
     auto rotation = coex::tensor::transposed(coex::tensor::Matrix<Scalar, 3, 3>{u, v, w});
 
     return coex::camera::Camera<Scalar>(vertical_fov, aspect_ratio, focus_distance, aperture_radius, position,
-                                          rotation);
+                                        rotation);
 }();
 
 inline constexpr auto background = [](const auto &ray) constexpr {
     return coex::math::lerp(ray.direction()[1], -1.0, 1.0, coex::tensor::Vector<Scalar, 3>{0.5, 0.7, 1.0},
-                              coex::tensor::Vector<Scalar, 3>{1.0, 1.0, 1.0});
+                            coex::tensor::Vector<Scalar, 3>{1.0, 1.0, 1.0});
 };
