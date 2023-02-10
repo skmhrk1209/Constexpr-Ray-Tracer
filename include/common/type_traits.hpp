@@ -3,7 +3,7 @@
 #include <optional>
 #include <type_traits>
 
-namespace rendex {
+namespace coex {
 
 template <typename, template <typename...> typename, typename...>
 struct is_detected_impl : std::false_type {};
@@ -41,4 +41,4 @@ concept Iterable = requires(T x) { std::begin(x), std::end(x); };
 template <typename T>
 concept Indexable = requires(T x) { x[std::declval<std::size_t>()]; };
 
-}  // namespace rendex
+}  // namespace coex

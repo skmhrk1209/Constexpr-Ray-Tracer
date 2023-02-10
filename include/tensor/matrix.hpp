@@ -5,7 +5,7 @@
 
 #include "tensor.hpp"
 
-namespace rendex::tensor {
+namespace coex::tensor {
 
 // ================================================================
 // lazy evaluation
@@ -41,4 +41,4 @@ constexpr auto operator%(const Matrix &matrix, const Vector &vector)
     (std::make_index_sequence<dimension_v<std::decay_t<decltype(matrix)>, 0>>{});
 }
 
-}  // namespace rendex::tensor
+}  // namespace coex::tensor

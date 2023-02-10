@@ -2,8 +2,8 @@
 
 #include "tensor.hpp"
 
-namespace rendex::camera {
-template <typename Scalar, template <typename, auto> typename Vector = rendex::tensor::Vector>
+namespace coex::camera {
+template <typename Scalar, template <typename, auto> typename Vector = coex::tensor::Vector>
 class Ray {
    public:
     constexpr Ray() = default;
@@ -27,4 +27,4 @@ class Ray {
     Vector<Scalar, 3> m_position;
     Vector<Scalar, 3> m_direction;
 };
-}  // namespace rendex::camera
+}  // namespace coex::camera

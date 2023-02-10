@@ -8,10 +8,10 @@
 #include "reflection.hpp"
 #include "tensor.hpp"
 
-namespace rendex::geometry {
+namespace coex::geometry {
 
-template <typename Scalar, template <typename, auto> typename Vector = rendex::tensor::Vector,
-          template <typename, template <typename, auto> typename> typename Material = rendex::reflection::Dielectric>
+template <typename Scalar, template <typename, auto> typename Vector = coex::tensor::Vector,
+          template <typename, template <typename, auto> typename> typename Material = coex::reflection::Dielectric>
 class Sphere {
    public:
     constexpr Sphere() = default;
@@ -33,14 +33,14 @@ class Sphere {
 
     constexpr auto intersect(const auto &ray) const {
         auto direction = ray.position() - m_position;
-        auto a = rendex::tensor::dot(ray.direction(), ray.direction());
-        auto b = rendex::tensor::dot(ray.direction(), direction);
-        auto c = rendex::tensor::dot(direction, direction) - m_radius * m_radius;
+        auto a = coex::tensor::dot(ray.direction(), ray.direction());
+        auto b = coex::tensor::dot(ray.direction(), direction);
+        auto c = coex::tensor::dot(direction, direction) - m_radius * m_radius;
         auto d = b * b - a * c;
 
         if (d >= 0) {
-            auto distance_1 = (-b - rendex::math::sqrt(d)) / a;
-            auto distance_2 = (-b + rendex::math::sqrt(d)) / a;
+            auto distance_1 = (-b - coex::math::sqrt(d)) / a;
+            auto distance_2 = (-b + coex::math::sqrt(d)) / a;
             if (distance_1 > 0.0 || distance_2 > 0.0) {
                 auto distance =
                     distance_1 > 0.0 ? distance_2 > 0.0 ? std::min(distance_1, distance_2) : distance_1 : distance_2;
@@ -54,7 +54,7 @@ class Sphere {
     }
 
     constexpr auto distance(const auto &position) const {
-        auto distance = rendex::tensor::norm(position - m_position) - m_radius;
+        auto distance = coex::tensor::norm(position - m_position) - m_radius;
         return std::make_tuple(Geometry<Scalar, Vector>(*this), distance);
     }
 
@@ -66,4 +66,4 @@ class Sphere {
     Material<Scalar, Vector> m_material;
 };
 
-}  // namespace rendex::geometry
+}  // namespace coex::geometry

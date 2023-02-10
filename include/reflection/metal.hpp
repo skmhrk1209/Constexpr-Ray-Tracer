@@ -9,9 +9,9 @@
 #include "tensor.hpp"
 #include "utilities.hpp"
 
-namespace rendex::reflection {
+namespace coex::reflection {
 
-template <typename Scalar, template <typename, auto> typename Vector = rendex::tensor::Vector>
+template <typename Scalar, template <typename, auto> typename Vector = coex::tensor::Vector>
 class Metal {
    public:
     constexpr Metal() = default;
@@ -29,18 +29,19 @@ class Metal {
     constexpr const auto &fuzziness() const { return m_fuzziness; }
 
     constexpr auto operator()(const auto &ray, const auto &normal, auto &generator) const {
-        auto complex_reflectance = rendex::math::square((1.0 - m_refractive_index) / (1.0 + m_refractive_index));
+        auto complex_reflectance = coex::math::square((1.0 - m_refractive_index) / (1.0 + m_refractive_index));
         auto specular_reflectance = [&]<auto... Is>(std::index_sequence<Is...>) {
-            return Vector<Scalar, 3>{rendex::math::abs(complex_reflectance[Is])...};
+            return Vector<Scalar, 3>{coex::math::abs(complex_reflectance[Is])...};
         }
-        (std::make_index_sequence<rendex::tensor::dimension_v<Vector<std::complex<Scalar>, 3>, 0>>{});
-        auto cosine = -rendex::tensor::dot(ray.direction(), normal);
+        (std::make_index_sequence<coex::tensor::dimension_v<Vector<std::complex<Scalar>, 3>, 0>>{});
+        auto cosine = -coex::tensor::dot(ray.direction(), normal);
         auto fresnel_reflectance = schlick_approx(specular_reflectance, cosine);
         auto reflected_position = ray.position() + 1e-6 * normal;
         auto reflected_direction = reflect(ray.direction(), normal);
-        auto random_direction = rendex::random::uniform_in_unit_sphere<Scalar, Vector>(generator) * m_fuzziness;
-        auto fuzzy_reflected_direction = rendex::tensor::normalized(reflected_direction + random_direction);
-        rendex::camera::Ray<Scalar, Vector> reflected_ray(reflected_position, fuzzy_reflected_direction);
+        auto random_direction = coex::random::uniform_in_unit_sphere<Scalar, Vector>(generator) * m_fuzziness;
+        auto fuzzy_reflected_direction = coex::tensor::normalized(reflected_direction + random_direction);
+        coex::camera::Ray<Scalar, Vector> reflected_ray(std::move(reflected_position),
+                                                          std::move(fuzzy_reflected_direction));
         return std::make_tuple(std::move(reflected_ray), std::move(fresnel_reflectance));
     }
 
@@ -49,4 +50,4 @@ class Metal {
     Scalar m_fuzziness;
 };
 
-}  // namespace rendex::reflection
+}  // namespace coex::reflection

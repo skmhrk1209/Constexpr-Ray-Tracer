@@ -2,7 +2,7 @@
 
 #include <tuple>
 
-namespace rendex {
+namespace coex {
 
 // Apply a function to each element of a tuple.
 template <auto... Is>

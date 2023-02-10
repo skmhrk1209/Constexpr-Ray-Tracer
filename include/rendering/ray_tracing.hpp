@@ -7,10 +7,10 @@
 #include "random.hpp"
 #include "tensor.hpp"
 
-namespace rendex::rendering {
+namespace coex::rendering {
 
 template <typename Scalar, auto ImageWidth, auto ImageHeight, auto PatchWidth, auto PatchHeight, auto PatchCoordX,
-          auto PatchCoordY, typename Generator = rendex::random::LCG<>>
+          auto PatchCoordY, typename Generator = coex::random::LCG<>>
 constexpr auto ray_tracing(const auto &object, const auto &camera, auto background, auto max_depth, auto num_samples,
                            auto random_seed) {
 #if IS_CONSTANT_EVALUATED
@@ -21,25 +21,25 @@ constexpr auto ray_tracing(const auto &object, const auto &camera, auto backgrou
 
     Generator generator(random_seed);
 
-    std::vector<rendex::tensor::Vector<Scalar, 2>> coords;
+    std::vector<coex::tensor::Vector<Scalar, 2>> coords;
     for (auto coord_y = PatchHeight * PatchCoordY; coord_y < PatchHeight * (PatchCoordY + 1); ++coord_y) {
         for (auto coord_x = PatchWidth * PatchCoordX; coord_x < PatchWidth * (PatchCoordX + 1); ++coord_x) {
-            coords.push_back(rendex::tensor::Vector<Scalar, 2>{coord_x, coord_y});
+            coords.push_back(coex::tensor::Vector<Scalar, 2>{coord_x, coord_y});
         }
     }
 
-    std::array<rendex::tensor::Vector<Scalar, 3>, PatchWidth * PatchHeight> colors;
+    std::array<coex::tensor::Vector<Scalar, 3>, PatchWidth * PatchHeight> colors;
     std::transform(std::begin(coords), std::end(coords), std::begin(colors), [&](const auto &coord) {
-        rendex::tensor::Vector<Scalar, 3> color{};
+        coex::tensor::Vector<Scalar, 3> color{};
 
         for (auto sample_index = 0; sample_index < num_samples; ++sample_index) {
-            auto coord_u = (coord[0] + rendex::random::uniform(generator, -0.5, 0.5)) / ImageWidth;
-            auto coord_v = (coord[1] + rendex::random::uniform(generator, -0.5, 0.5)) / ImageHeight;
+            auto coord_u = (coord[0] + coex::random::uniform(generator, -0.5, 0.5)) / ImageWidth;
+            auto coord_v = (coord[1] + coex::random::uniform(generator, -0.5, 0.5)) / ImageHeight;
 
             auto ray = camera.ray(coord_u, coord_v, generator);
 
-            color = color + [&]() constexpr -> rendex::tensor::Vector<Scalar, 3> {
-                rendex::tensor::Vector<Scalar, 3> albedo{1.0, 1.0, 1.0};
+            color = color + [&]() constexpr -> coex::tensor::Vector<Scalar, 3> {
+                coex::tensor::Vector<Scalar, 3> albedo{1.0, 1.0, 1.0};
                 for (auto depth = 0; depth < max_depth; ++depth) {
                     auto [geometry, distance] = object.intersect(ray);
 
@@ -73,4 +73,4 @@ constexpr auto ray_tracing(const auto &object, const auto &camera, auto backgrou
     return colors;
 }
 
-}  // namespace rendex::rendering
+}  // namespace coex::rendering

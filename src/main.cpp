@@ -22,15 +22,15 @@ int main() {
     CONSTEXPR auto image = [&]() constexpr {
         // rendering
         auto colors =
-            rendex::rendering::ray_tracing<Scalar, ImageWidth, ImageHeight, PatchWidth, PatchHeight, PatchCoordX,
+            coex::rendering::ray_tracing<Scalar, ImageWidth, ImageHeight, PatchWidth, PatchHeight, PatchCoordX,
                                            PatchCoordY>(object, camera, background, MaxDepth, NumSamples, RandomSeed);
 
         // gamma correction
         std::transform(std::begin(colors), std::end(colors), std::begin(colors),
-                       [](const auto &color) { return rendex::tensor::elemwise(rendex::math::sqrt<Scalar>, color); });
+                       [](const auto &color) { return coex::tensor::elemwise(coex::math::sqrt<Scalar>, color); });
         return colors;
     }();
 
     auto filename = "outputs/patch_"s + std::to_string(PatchCoordX) + "_"s + std::to_string(PatchCoordY) + ".ppm"s;
-    rendex::image::write_ppm(filename, image, PatchWidth, PatchHeight);
+    coex::image::write_ppm(filename, image, PatchWidth, PatchHeight);
 }

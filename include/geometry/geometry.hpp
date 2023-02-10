@@ -6,14 +6,15 @@
 #include "reflection.hpp"
 #include "sphere.hpp"
 
-namespace rendex::geometry {
+namespace coex::geometry {
 
 template <typename Scalar, template <typename, auto> typename Vector,
           template <typename, template <typename, auto> typename> typename Material>
 class Sphere;
 
 template <typename Scalar, template <typename, auto> typename Vector>
-using Geometry = std::variant<Sphere<Scalar, Vector, rendex::reflection::Dielectric>,
-                              Sphere<Scalar, Vector, rendex::reflection::Metal>>;
+using Geometry = std::variant<Sphere<Scalar, Vector, coex::reflection::Lambertian>,
+                              Sphere<Scalar, Vector, coex::reflection::Dielectric>,
+                              Sphere<Scalar, Vector, coex::reflection::Metal>>;
 
-}  // namespace rendex::geometry
+}  // namespace coex::geometry

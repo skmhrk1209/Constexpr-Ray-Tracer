@@ -4,7 +4,7 @@
 #include <concepts>
 #include <type_traits>
 
-namespace rendex::math {
+namespace coex::math {
 
 constexpr auto root_impl(std::floating_point auto x, std::floating_point auto y, std::floating_point auto z,
                          std::integral auto n) -> decltype(x) {
@@ -41,4 +41,4 @@ constexpr auto abs(const std::complex<T> &x) {
     return sqrt(std::real(x * std::conj(x)));
 }
 
-}  // namespace rendex::math
+}  // namespace coex::math

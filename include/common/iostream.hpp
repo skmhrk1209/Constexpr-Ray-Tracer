@@ -7,7 +7,7 @@
 #include "algorithm.hpp"
 #include "type_traits.hpp"
 
-namespace rendex {
+namespace coex {
 
 template <typename... Ts>
 decltype(auto) operator>>(std::istream &istream, std::tuple<Ts...> &tuple) {
@@ -49,7 +49,7 @@ decltype(auto) operator<<(std::ostream &ostream, const std::variant<T, Ts...> &v
 
 template <typename T>
 decltype(auto) operator>>(std::istream &istream, T &iterable)
-    requires(rendex::Iterable<T> && !rendex::is_string_v<T>)
+    requires(coex::Iterable<T> && !coex::is_string_v<T>)
 {
     for (auto &element : iterable) {
         istream >> element;
@@ -59,7 +59,7 @@ decltype(auto) operator>>(std::istream &istream, T &iterable)
 
 template <typename T>
 decltype(auto) operator<<(std::ostream &ostream, const T &iterable)
-    requires(rendex::Iterable<T> && !rendex::is_string_v<T>)
+    requires(coex::Iterable<T> && !coex::is_string_v<T>)
 {
     ostream << "[ ";
     for (const auto &element : iterable) {
@@ -69,4 +69,4 @@ decltype(auto) operator<<(std::ostream &ostream, const T &iterable)
     return ostream;
 }
 
-}  // namespace rendex
+}  // namespace coex

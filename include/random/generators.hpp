@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace rendex::random {
+namespace coex::random {
 
 template <typename T = std::uint_fast32_t>
 constexpr auto now() {
@@ -29,4 +29,4 @@ class LCG {
     T m_random;
 };
 
-}  // namespace rendex::random
+}  // namespace coex::random

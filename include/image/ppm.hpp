@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <fstream>
 
-namespace rendex::image {
+namespace coex::image {
 
 auto write_ppm(const auto &filename, const auto &colors, auto width, auto height) {
     std::ofstream ostream(filename);
@@ -20,4 +20,4 @@ auto write_ppm(const auto &filename, const auto &colors, auto width, auto height
     }
 }
 
-}  // namespace rendex::image
+}  // namespace coex::image

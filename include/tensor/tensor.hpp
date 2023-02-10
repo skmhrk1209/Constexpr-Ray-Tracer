@@ -9,7 +9,7 @@
 #include "common.hpp"
 #include "math.hpp"
 
-namespace rendex::tensor {
+namespace coex::tensor {
 
 // ================================================================
 // class
@@ -18,7 +18,7 @@ template <template <typename, auto> typename Array, typename T, auto N, auto... 
 struct GenericTensorImpl : Array<GenericTensorImpl<Array, T, Ns...>, N> {};
 
 template <template <typename, auto> typename Array, typename T, auto N>
-    requires rendex::Indexable<Array<T, N>>
+    requires coex::Indexable<Array<T, N>>
 struct GenericTensorImpl<Array, T, N> : Array<T, N> {};
 
 template <template <typename, auto> typename Array, typename T, auto... Ns>
@@ -254,7 +254,7 @@ constexpr auto transposed(const Tensor &tensor)
 // ================================================================
 // norm
 
-constexpr auto norm(const TensorShaped auto &tensor) { return rendex::math::sqrt(dot(tensor, tensor)); }
+constexpr auto norm(const TensorShaped auto &tensor) { return coex::math::sqrt(dot(tensor, tensor)); }
 
 constexpr auto normalized(const TensorShaped auto &tensor) { return tensor / norm(tensor); }
 
@@ -273,4 +273,4 @@ constexpr auto elemwise(Function &&function, Tensor &&tensor) {
     }
 }
 
-}  // namespace rendex::tensor
+}  // namespace coex::tensor

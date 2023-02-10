@@ -7,7 +7,7 @@
 #include "camera.hpp"
 #include "common.hpp"
 
-namespace rendex::geometry {
+namespace coex::geometry {
 
 template <typename Geometry1, typename Geometry2, typename Op>
 class CSG {
@@ -48,7 +48,7 @@ class CSG {
 struct UnionOp {
     template <typename T>
     constexpr auto operator()(const T &x, const T &y) const {
-        if constexpr (rendex::is_optional_v<T>)
+        if constexpr (coex::is_optional_v<T>)
             return x ? y ? x.value() < y.value() : true : false;
         else
             return x < y;
@@ -58,7 +58,7 @@ struct UnionOp {
 struct SubtractionOp {
     template <typename T>
     constexpr auto operator()(const T &x, const T &y) const {
-        if constexpr (rendex::is_optional_v<T>)
+        if constexpr (coex::is_optional_v<T>)
             return x ? y ? x.value() > -y.value() : true : false;
         else
             return x > -y;
@@ -68,7 +68,7 @@ struct SubtractionOp {
 struct IntersectionOp {
     template <typename T>
     constexpr auto operator()(const T &x, const T &y) const {
-        if constexpr (rendex::is_optional_v<T>)
+        if constexpr (coex::is_optional_v<T>)
             return x ? y ? x.value() > y.value() : true : false;
         else
             return x > y;
@@ -100,4 +100,4 @@ constexpr auto construct_intersection(Geometry1 &&geometry_1, Geometry2 &&geomet
                                               std::forward<Geometry2>(geometry_2));
 }
 
-}  // namespace rendex::geometry
+}  // namespace coex::geometry

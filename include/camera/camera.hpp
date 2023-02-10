@@ -7,9 +7,9 @@
 #include "ray.hpp"
 #include "tensor.hpp"
 
-namespace rendex::camera {
-template <typename Scalar, template <typename, auto> typename Vector = rendex::tensor::Vector,
-          template <typename, auto, auto> typename Matrix = rendex::tensor::Matrix>
+namespace coex::camera {
+template <typename Scalar, template <typename, auto> typename Vector = coex::tensor::Vector,
+          template <typename, auto, auto> typename Matrix = coex::tensor::Matrix>
 class Camera {
    public:
     constexpr Camera() = default;
@@ -53,12 +53,12 @@ class Camera {
     constexpr auto ray(auto coord_u, auto coord_v, auto &generator) const {
         auto viewport_height = 2.0 * std::tan(m_vertical_fov / 2.0);
         auto viewport_width = viewport_height * m_aspect_ratio;
-        auto coord_x = rendex::math::lerp(coord_u, 0.0, 1.0, -viewport_width / 2.0, viewport_width / 2.0);
-        auto coord_y = rendex::math::lerp(coord_v, 0.0, 1.0, -viewport_height / 2.0, viewport_height / 2.0);
+        auto coord_x = coex::math::lerp(coord_u, 0.0, 1.0, -viewport_width / 2.0, viewport_width / 2.0);
+        auto coord_y = coex::math::lerp(coord_v, 0.0, 1.0, -viewport_height / 2.0, viewport_height / 2.0);
         auto target = m_position + m_orientation % Vector<Scalar, 3>{coord_x, coord_y, 1.0} * m_focus_distance;
-        auto defocus = rendex::random::uniform_in_unit_circle<Scalar, Vector>(generator) * m_aperture_radius;
+        auto defocus = coex::random::uniform_in_unit_circle<Scalar, Vector>(generator) * m_aperture_radius;
         auto position = m_position + m_orientation % defocus;
-        auto direction = rendex::tensor::normalized(target - position);
+        auto direction = coex::tensor::normalized(target - position);
         return Ray<Scalar, Vector>{position, direction};
     }
 
@@ -70,4 +70,4 @@ class Camera {
     Vector<Scalar, 3> m_position;
     Matrix<Scalar, 3, 3> m_orientation;
 };
-}  // namespace rendex::camera
+}  // namespace coex::camera
