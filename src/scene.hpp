@@ -13,13 +13,13 @@ using Scalar = double;
 // object
 inline constexpr auto object = []() constexpr {
     using namespace std::literals::complex_literals;
-    rendex::random::LCG<> generator(rendex::random::now());
+    rendex::random::LCG<> generator(__LINE__);
     return rendex::geometry::construct_union(
         // ground sphere
         rendex::geometry::Sphere<Scalar, rendex::tensor::Vector, rendex::reflection::Dielectric>(
             1000.0, rendex::tensor::Vector<Scalar, 3>{0.0, 1000.0, 0.0},
             rendex::reflection::Dielectric<Scalar, rendex::tensor::Vector>(
-                rendex::tensor::Vector<Scalar, 3>{0.5, 0.5, 0.5}, {}, 1.0, 1.0, 0.0)),
+                rendex::tensor::Vector<Scalar, 3>{0.5, 0.5, 0.5}, {}, 1.5, 1.0, 1.0)),
         rendex::geometry::construct_union(
             // left sphere (gold)
             rendex::geometry::Sphere<Scalar, rendex::tensor::Vector, rendex::reflection::Metal>(
@@ -30,15 +30,13 @@ inline constexpr auto object = []() constexpr {
                         0.42108 + 2.34590i,
                         1.37340 + 1.77040i,
                     },
-                    rendex::random::uniform(generator, 0.0, 0.5))),
+                    0.0)),
             rendex::geometry::construct_union(
                 // center sphere (glass)
                 rendex::geometry::Sphere<Scalar, rendex::tensor::Vector, rendex::reflection::Dielectric>(
                     1.0, rendex::tensor::Vector<Scalar, 3>{0.0, -1.0, 0.0},
                     rendex::reflection::Dielectric<Scalar, rendex::tensor::Vector>(
-                        {}, rendex::tensor::Vector<Scalar, 3>{1.0, 1.0, 1.0},
-                        rendex::random::uniform(generator, 1.0, 2.0), 0.0,
-                        rendex::random::uniform(generator, 0.0, 0.5))),
+                        {}, rendex::tensor::Vector<Scalar, 3>{1.0, 1.0, 1.0}, 1.5, 0.0, 0.0)),
                 rendex::geometry::construct_union(
                     // right sphere (platinum)
                     rendex::geometry::Sphere<Scalar, rendex::tensor::Vector, rendex::reflection::Metal>(
@@ -49,7 +47,7 @@ inline constexpr auto object = []() constexpr {
                                 2.08470 + 3.71530i,
                                 1.84530 + 3.13650i,
                             },
-                            rendex::random::uniform(generator, 0.0, 0.5))),
+                            0.0)),
                     rendex::geometry::construct_union(
                         // tiny sphere (scatteing only)
                         [function =
@@ -66,7 +64,7 @@ inline constexpr auto object = []() constexpr {
                                                                        rendex::random::uniform(generator, 0.0, 1.0),
                                                                        rendex::random::uniform(generator, 0.0, 1.0)});
                                  auto refractive_index = rendex::random::uniform(generator, 1.0, 2.0);
-                                 auto fuzziness = rendex::random::uniform(generator, 0.0, 0.5);
+                                 auto fuzziness = rendex::random::uniform(generator, 0.5, 1.0);
                                  rendex::geometry::Sphere<Scalar, rendex::tensor::Vector,
                                                           rendex::reflection::Dielectric>
                                      sphere(radius, position,
@@ -151,7 +149,7 @@ inline constexpr auto camera = []() constexpr {
     auto focus_distance = 10.0;
     auto aperture_radius = 0.1;
 
-    rendex::tensor::Vector<Scalar, 3> position{10.0, -2.0, -5.0};
+    rendex::tensor::Vector<Scalar, 3> position{12.0, -2.0, -6.0};
     rendex::tensor::Vector<Scalar, 3> target{0.0, 0.0, 0.0};
     rendex::tensor::Vector<Scalar, 3> down{0.0, 1.0, 0.0};
 
