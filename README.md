@@ -1,5 +1,7 @@
 # Constexpr Ray Tracer
 
+![image](image.png)
+
 This repository provides a C++ program that renders a predefined scene at compile time using constexpr functions and just saves the rendered image at run time. Simple path tracing and sphere tracing have been implemented as rendering methods, but I'm aiming to implement more rigorous physically based rendering in the future.
 
 ## Separate Rendering
