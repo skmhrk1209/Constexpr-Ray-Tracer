@@ -20,9 +20,9 @@ class CSG {
     constexpr CSG(Geometry1 &&geometry_1, Geometry2 &&geometry_2)
         : m_geometry_1(std::move(geometry_1)), m_geometry_2(std::move(geometry_2)) {}
 
-    constexpr auto distance(const auto &position) const {
-        auto [geometry_1, distance_1] = m_geometry_1.distance(position);
-        auto [geometry_2, distance_2] = m_geometry_2.distance(position);
+    constexpr auto intersect(const auto &ray) const {
+        auto [geometry_1, distance_1] = m_geometry_1.intersect(ray);
+        auto [geometry_2, distance_2] = m_geometry_2.intersect(ray);
         if (Op()(distance_1, distance_2)) {
             return std::make_tuple(std::move(geometry_1), std::move(distance_1));
         } else {
@@ -30,9 +30,9 @@ class CSG {
         }
     }
 
-    constexpr auto intersect(const auto &ray) const {
-        auto [geometry_1, distance_1] = m_geometry_1.intersect(ray);
-        auto [geometry_2, distance_2] = m_geometry_2.intersect(ray);
+    constexpr auto distance(const auto &position) const {
+        auto [geometry_1, distance_1] = m_geometry_1.distance(position);
+        auto [geometry_2, distance_2] = m_geometry_2.distance(position);
         if (Op()(distance_1, distance_2)) {
             return std::make_tuple(std::move(geometry_1), std::move(distance_1));
         } else {

@@ -40,6 +40,7 @@ constexpr auto ray_tracing(const auto &object, const auto &camera, auto backgrou
 
             color = color + [&]() constexpr -> coex::tensor::Vector<Scalar, 3> {
                 coex::tensor::Vector<Scalar, 3> albedo{1.0, 1.0, 1.0};
+
                 for (auto depth = 0; depth < max_depth; ++depth) {
                     auto [geometry, distance] = object.intersect(ray);
 

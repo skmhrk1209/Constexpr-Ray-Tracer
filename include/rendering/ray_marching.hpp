@@ -40,11 +40,13 @@ constexpr auto ray_marching(const auto &object, const auto &camera, auto backgro
 
             color = color + [&]() constexpr -> coex::tensor::Vector<Scalar, 3> {
                 coex::tensor::Vector<Scalar, 3> albedo{1.0, 1.0, 1.0};
+
                 for (auto depth = 0; depth < max_depth; ++depth) {
-                    auto intersected = false;
                     for (auto step = 0; step < max_step; ++step) {
                         auto [geometry, distance] = object.distance(ray.position());
+
                         ray.advance(distance);
+
                         if (std::abs(distance) < epsilon) {
                             std::visit(
                                 [&](auto &geometry) {
@@ -55,14 +57,12 @@ constexpr auto ray_marching(const auto &object, const auto &camera, auto backgro
                                     albedo = albedo * std::get<1>(reflection);
                                 },
                                 geometry);
-                            intersected = true;
                             break;
                         } else {
                             auto [geometry, distance] = bounds.distance(ray.position());
-                            if (distance > 0.0) return background(ray) * albedo;
+                            if (distance > 0.0 || step == max_step - 1) return background(ray) * albedo;
                         }
                     }
-                    if (!intersected) return background(ray) * albedo;
                 }
 
                 return {};

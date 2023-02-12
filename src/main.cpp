@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <string>
 
 #include "image.hpp"
@@ -31,6 +32,8 @@ int main() {
         return colors;
     }();
 
-    auto filename = "outputs/patch_"s + std::to_string(PatchCoordX) + "_"s + std::to_string(PatchCoordY) + ".ppm"s;
+    std::filesystem::path filename =
+        "outputs/patch_"s + std::to_string(PatchCoordX) + "_"s + std::to_string(PatchCoordY) + ".ppm"s;
+    std::filesystem::create_directories(filename.parent_path());
     coex::image::write_ppm(filename, image, PatchWidth, PatchHeight);
 }
