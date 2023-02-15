@@ -1,4 +1,5 @@
 import os
+import json
 import atexit
 import random
 import asyncio
@@ -17,128 +18,161 @@ def main(args):
     @atexit.register
     def killall():
         for process in processes:
-            process.kill()
+            if process.returncode is None:
+                try:
+                    process.kill()
+                # NOTE: why...?
+                except ProcessLookupError:
+                    pass
+        else:
+            processes.clear()
 
-    async def compile_image():
+    def create_coroutine(program):
 
-        semaphore = asyncio.Semaphore(args.max_workers)
+        async def coroutine():
 
-        async def compile_patch(patch_coord_x, patch_coord_y):
+            semaphore = asyncio.Semaphore(args.max_workers)
 
-            async with semaphore:
+            async def subcoroutine(patch_coord_x, patch_coord_y):
 
-                print(f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
-                print("Launching...")
+                async with semaphore:
 
-                dirname = f"build/patch_{patch_coord_x}_{patch_coord_y}"
-                os.makedirs(dirname, exist_ok=True)
+                    print(f"\n-------------------------------- Patch ({patch_coord_x}, {patch_coord_y}) --------------------------------")
+                    print(">>> Launching...")
 
-                with open(os.path.join(dirname, "build.sh"), "w") as file:
+                    process = await asyncio.create_subprocess_shell(
+                        program(patch_coord_x, patch_coord_y),
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                    )
+                    processes.add(process)
 
-                    file.write(textwrap.dedent(f"""\
-                        #!/bin/bash
+                    print(f"\n-------------------------------- Patch ({patch_coord_x}, {patch_coord_y}) --------------------------------")
+                    print(">>> Launched!")
 
-                        echo -------------------------------- CMake --------------------------------
+                    while not process.stdout.at_eof():
 
-                        cmake \\
-                            -D CMAKE_BUILD_TYPE=Release \\
-                            -D CONSTEXPR={"ON" if args.constexpr else "OFF"} \\
-                            -D IMAGE_WIDTH={args.image_width} \\
-                            -D IMAGE_HEIGHT={args.image_height} \\
-                            -D PATCH_WIDTH={args.patch_width} \\
-                            -D PATCH_HEIGHT={args.patch_height} \\
-                            -D PATCH_COORD_X={patch_coord_x} \\
-                            -D PATCH_COORD_Y={patch_coord_y} \\
-                            -D MAX_DEPTH={args.max_depth} \\
-                            -D NUM_SAMPLES={args.num_samples} \\
-                            -D RANDOM_SEED={args.random_seed} \\
-                            -S {os.path.dirname(os.path.abspath(__file__))} \\
-                            -B {os.path.join(dirname, "build")}
+                        try:
+                            line = await asyncio.wait_for(process.stdout.readline(), args.stdout_timeout)
 
-                        echo -------------------------------- Make --------------------------------
+                        except asyncio.TimeoutError:
+                            pass
 
-                        cmake --build {os.path.join(dirname, "build")}
+                        else:
+                            print(f"\n-------------------------------- Patch ({patch_coord_x}, {patch_coord_y}) --------------------------------")
+                            print(line.decode())
 
-                        echo -------------------------------- Rendering --------------------------------
+                    await process.wait()
 
-                        {os.path.join(dirname, "build", "ray_tracing")}
-                    """))
+                return (patch_coord_x, patch_coord_y), process
 
-                process = await asyncio.create_subprocess_shell(
-                    f"srun bash {os.path.join(dirname, 'build.sh')}",
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    limit=1024 * 128,
-                )
-                processes.add(process)
+            patch_coords_y, patch_coords_x = zip(*itertools.product(range(args.image_height // args.patch_height), range(args.image_width // args.patch_width)))
+            subtasks = list(map(asyncio.create_task, map(subcoroutine, patch_coords_x, patch_coords_y)))
 
-                print(f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
-                print("Launched!")
+            for subtask in asyncio.as_completed(subtasks):
 
-                while not process.stdout.at_eof():
+                (patch_coord_x, patch_coord_y), process = await subtask
 
-                    try:
-                        line = await asyncio.wait_for(process.stdout.readline(), args.stdout_timeout)
+                print(f"\n-------------------------------- Patch ({patch_coord_x}, {patch_coord_y}) --------------------------------")
+                print(">>> Failed..." if process.returncode else ">>> Succeeded!")
 
-                    except asyncio.TimeoutError:
-                        pass
+                if process.returncode: break
 
-                    else:
-                        print(f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
-                        print(line.decode())
+            else:
+                return True
 
-                await process.wait()
+            killall()
 
-            return (patch_coord_x, patch_coord_y), process
+            for subtask in subtasks:
+                if not subtask.done():
+                    subtask.cancel()
 
-        patch_coords_x, patch_coords_y = zip(*itertools.product(range(args.image_height // args.patch_height), range(args.image_width // args.patch_width)))
-        patch_compilations = list(map(asyncio.create_task, map(compile_patch, patch_coords_x, patch_coords_y)))
+            return False
 
-        for patch_compilation in asyncio.as_completed(patch_compilations):
+        return coroutine
 
-            (patch_coord_x, patch_coord_y), process = await patch_compilation
+    print(f"\n================================ Parameters ================================")
 
-            print(f"\n================================ Patch ({patch_coord_x}, {patch_coord_y}) ================================")
-            print("Process failed..." if process.returncode else "Process succeeded!")
+    print(json.dumps(vars(args), indent=4))
 
-            if process.returncode: break
+    print(f"\n================================ CMake ================================")
 
-            processes.remove(process)
+    if (asyncio.run(create_coroutine(lambda patch_coord_x, patch_coord_y: textwrap.dedent(f"""\
+        srun cmake \\
+            -D CMAKE_BUILD_TYPE=Release \\
+            -D CONSTEXPR={"ON" if args.constexpr else "OFF"} \\
+            -D IMAGE_WIDTH={args.image_width} \\
+            -D IMAGE_HEIGHT={args.image_height} \\
+            -D PATCH_WIDTH={args.patch_width} \\
+            -D PATCH_HEIGHT={args.patch_height} \\
+            -D PATCH_COORD_X={patch_coord_x} \\
+            -D PATCH_COORD_Y={patch_coord_y} \\
+            -D MAX_DEPTH={args.max_depth} \\
+            -D NUM_SAMPLES={args.num_samples} \\
+            -D RANDOM_SEED={args.random_seed} \\
+            -S {os.path.dirname(os.path.abspath(__file__))} \\
+            -B build/patch_{patch_coord_x}_{patch_coord_y}
+    """))())):
+
+        print(f"\n================================ CMake ================================")
+        print(">>> Succeeded!")
+
+        print(f"\n================================ Make ================================")
+
+        if (asyncio.run(create_coroutine(lambda patch_coord_x, patch_coord_y: textwrap.dedent(f"""\
+            srun cmake --build build/patch_{patch_coord_x}_{patch_coord_y}
+        """))())):
+
+            print(f"\n================================ Make ================================")
+            print(">>> Succeeded!")
+
+            print(f"\n================================ App ================================")
+
+            if (asyncio.run(create_coroutine(lambda patch_coord_x, patch_coord_y: textwrap.dedent(f"""\
+                srun build/patch_{patch_coord_x}_{patch_coord_y}/ray_tracing
+            """))())):
+
+                print(f"\n================================ App ================================")
+                print(">>> Succeeded!")
+
+                image = np.concatenate([
+                    np.concatenate([
+                        skimage.io.imread(f"outputs/patch_{patch_coord_x}_{patch_coord_y}.ppm")
+                        for patch_coord_x in range(args.image_width // args.patch_width)
+                    ], axis=1)
+                    for patch_coord_y in range(args.image_height // args.patch_height)
+                ], axis=0)
+
+                skimage.io.imsave(f"outputs/image.png", image)
+
+            else:
+
+                print(f"\n================================ App ================================")
+                print(">>> Failed...")
 
         else:
 
-            print("\n================================================================")
-            print("All the patches were successfully rendered!")
+            print(f"\n================================ Make ================================")
+            print(">>> Failed...")
 
-            image = np.concatenate([
-                np.concatenate([
-                    skimage.io.imread(f"outputs/patch_{patch_coord_x}_{patch_coord_y}.ppm")
-                    for patch_coord_x in range(args.image_width // args.patch_width)
-                ], axis=1)
-                for patch_coord_y in range(args.image_height // args.patch_height)
-            ], axis=0)
+    else:
 
-            skimage.io.imsave(f"outputs/image.png", image)
-
-        for patch_compilation in patch_compilations:
-            if not patch_compilation.done():
-                patch_compilation.cancel()
-
-    asyncio.run(compile_image())
+        print(f"\n================================ CMake ================================")
+        print(">>> Failed...")
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Separate Compilation Script")
     parser.add_argument("--constexpr", action="store_true", help="whether to enable compile-time ray tracing")
-    parser.add_argument("--image_width", type=int, default=1200, help="width of the image")
-    parser.add_argument("--image_height", type=int, default=800, help="height of the image")
-    parser.add_argument("--patch_width", type=int, default=300, help="width of each patch")
-    parser.add_argument("--patch_height", type=int, default=200, help="height of each patch")
+    parser.add_argument("--image_width", type=int, default=600, help="width of the image")
+    parser.add_argument("--image_height", type=int, default=400, help="height of the image")
+    parser.add_argument("--patch_width", type=int, default=10, help="width of each patch")
+    parser.add_argument("--patch_height", type=int, default=10, help="height of each patch")
     parser.add_argument("--max_depth", type=int, default=50, help="maximum depth for recursive ray tracing")
-    parser.add_argument("--num_samples", type=int, default=500, help="number of samples for MSAA (Multi-Sample Anti-Aliasing)")
+    parser.add_argument("--num_samples", type=int, default=10, help="number of samples for MSAA (Multi-Sample Anti-Aliasing)")
     parser.add_argument("--random_seed", type=int, default=random.randrange(1 << 32), help="random seed for Monte Carlo approximation")
-    parser.add_argument("--max_workers", type=int, default=16, help="maximum number of workers for multiprocessing")
-    parser.add_argument("--stdout_timeout", type=float, default=1.0, help="Timeout for reading one line from the stream of each child process")
+    parser.add_argument("--max_workers", type=int, default=8, help="maximum number of workers for multiprocessing")
+    parser.add_argument("--stdout_timeout", type=float, default=1.0, help="timeout for reading one line from the stream of each child process")
 
     main(parser.parse_args())

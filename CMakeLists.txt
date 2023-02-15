@@ -70,7 +70,7 @@ target_compile_definitions(
     RANDOM_SEED=${RANDOM_SEED}
 )
 
-math(EXPR FCONSTEXPR_OPS_LIMIT "1 << 30")
+math(EXPR FCONSTEXPR_OPS_LIMIT "(1 << 32) - 1")
 target_compile_options(
     ray_tracing PRIVATE
     $<$<CONFIG:Release>:-O3 -march=native>
