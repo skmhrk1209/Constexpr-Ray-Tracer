@@ -170,7 +170,7 @@ if __name__ == "__main__":
     parser.add_argument("--patch_width", type=int, default=10, help="width of each patch")
     parser.add_argument("--patch_height", type=int, default=10, help="height of each patch")
     parser.add_argument("--max_depth", type=int, default=50, help="maximum depth for recursive ray tracing")
-    parser.add_argument("--num_samples", type=int, default=10, help="number of samples for MSAA (Multi-Sample Anti-Aliasing)")
+    parser.add_argument("--num_samples", type=int, default=10, help="number of samples for SSAA (Super-Sampling Anti-Aliasing)")
     parser.add_argument("--random_seed", type=int, default=random.randrange(1 << 32), help="random seed for Monte Carlo approximation")
     parser.add_argument("--max_workers", type=int, default=8, help="maximum number of workers for multiprocessing")
     parser.add_argument("--stdout_timeout", type=float, default=1.0, help="timeout for reading one line from the stream of each child process")

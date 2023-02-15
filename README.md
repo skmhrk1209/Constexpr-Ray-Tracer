@@ -27,7 +27,7 @@ optional arguments:
   --patch_width PATCH_WIDTH       width of each patch
   --patch_height PATCH_HEIGHT     height of each patch
   --max_depth MAX_DEPTH           maximum depth for recursive ray tracing
-  --num_samples NUM_SAMPLES       number of samples for MSAA (Multi-Sample Anti-Aliasing)
+  --num_samples NUM_SAMPLES       number of samples for SSAA (Super-Sampling Anti-Aliasing)
   --random_seed RANDOM_SEED       random seed for Monte Carlo approximation
   --max_workers MAX_WORKERS       maximum number of workers for multiprocessing
   --stdout_timeout STDOUT_TIMEOUT timeout for reading one line from the stream of each child process
